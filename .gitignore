@@ -1,0 +1,32 @@
+# Секреты и ключи — НИКОГДА не коммитить
+.env
+.env.*
+!.env.example
+*.txt
+.mcp.json
+
+# Claude Code internal
+.claude/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Медиафайлы (большие)
+landing/assets/video/*.mp4
+landing/assets/video/*.mov
+landing/assets/images/*.jpg
+landing/assets/images/*.jpeg
+landing/assets/images/*.png
+landing/assets/images/*.webp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/

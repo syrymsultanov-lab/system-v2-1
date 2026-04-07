@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>system v2 — Дашборд</title>
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ===== TOP NAVBAR ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="#" class="topbar-logo">system <span>v2</span></a>
+  </div>
+
+  <div class="topbar-clocks">
+    <div class="clock-item">
+      <span class="clock-city">🇰🇿 Астана</span>
+      <span class="clock-time" id="clock-astana">--:--</span>
+    </div>
+    <div class="clock-divider"></div>
+    <div class="clock-item">
+      <span class="clock-city">🇷🇺 Москва</span>
+      <span class="clock-time" id="clock-moscow">--:--</span>
+    </div>
+    <div class="clock-divider"></div>
+    <div class="clock-item">
+      <span class="clock-city">📍 Локальное</span>
+      <span class="clock-time" id="clock-local">--:--</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <button class="topbar-btn" title="Уведомления">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="notif-badge">3</span>
+    </button>
+    <div class="topbar-user">
+      <div class="user-avatar">С</div>
+      <div class="user-info">
+        <div class="user-name">Саира С.</div>
+        <div class="user-role">owner</div>
+      </div>
+    </div>
+    <button class="topbar-btn topbar-logout" title="Выйти">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-tab="today">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Сегодня</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="leads">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Лиды</span>
+        <span class="nav-badge">12</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="contacts">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Контакты</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="tasks">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span>Задачи</span>
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="structure">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
+          <line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="13" x2="5" y2="17"/>
+          <line x1="12" y1="13" x2="19" y2="17"/>
+        </svg>
+        <span>Структура</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="history">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>История</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="learning">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        <span>Обучение</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="templates">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Шаблоны</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Настройки</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="../landing/index.html" class="sidebar-site-link">← На сайт</a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- TAB: СЕГОДНЯ -->
+    <div class="tab-content active" id="tab-today">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Сегодня</h1>
+          <p class="page-date" id="today-date">—</p>
+        </div>
+        <div class="ai-status" id="ai-status">
+          <span class="ai-dot"></span>
+          <span class="ai-label">AI агент активен</span>
+        </div>
+      </div>
+
+      <!-- Stat Cards (данные заполняет db.js из Supabase) -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--leads">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-label">Всего лидов</div>
+          </div>
+          <div class="stat-trend stat-trend--up" id="trend-total">↑</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--contacts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-new-today">—</div>
+            <div class="stat-label">Новых сегодня</div>
+          </div>
+          <div class="stat-trend stat-trend--up" id="trend-new-today">↑</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--tasks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-in-work">—</div>
+            <div class="stat-label">В работе</div>
+          </div>
+          <div class="stat-trend stat-trend--neutral" id="trend-in-work">—</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--conversion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-converted">—</div>
+            <div class="stat-label">Конвертировано</div>
+          </div>
+          <div class="stat-trend stat-trend--up" id="trend-converted">↑</div>
+        </div>
+      </div>
+
+      <!-- Bottom Grid -->
+      <div class="today-grid">
+
+        <!-- AI Last Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Действия AI агента</h2>
+            <span class="card-badge card-badge--green">Работает</span>
+          </div>
+          <ul class="ai-feed">
+            <li class="ai-feed-item">
+              <span class="ai-feed-icon">🔍</span>
+              <div class="ai-feed-body">
+                <div class="ai-feed-text">Квалифицировал лида <strong>Арман К.</strong> — статус: горячий</div>
+                <div class="ai-feed-time">14 мин назад</div>
+              </div>
+            </li>
+            <li class="ai-feed-item">
+              <span class="ai-feed-icon">💬</span>
+              <div class="ai-feed-body">
+                <div class="ai-feed-text">Отправил приветственное сообщение <strong>Гульнара М.</strong></div>
+                <div class="ai-feed-time">1 ч назад</div>
+              </div>
+            </li>
+            <li class="ai-feed-item">
+              <span class="ai-feed-icon">📋</span>
+              <div class="ai-feed-body">
+                <div class="ai-feed-text">Создал задачу: позвонить <strong>Дмитрию Р.</strong> сегодня до 18:00</div>
+                <div class="ai-feed-time">2 ч назад</div>
+              </div>
+            </li>
+            <li class="ai-feed-item">
+              <span class="ai-feed-icon">🔄</span>
+              <div class="ai-feed-body">
+                <div class="ai-feed-text">Follow-up отправлен <strong>Айгуль С.</strong> (3-й день)</div>
+                <div class="ai-feed-time">3 ч назад</div>
+              </div>
+            </li>
+            <li class="ai-feed-item">
+              <span class="ai-feed-icon">✅</span>
+              <div class="ai-feed-body">
+                <div class="ai-feed-text">Лид <strong>Асель Н.</strong> конвертирован в контакт</div>
+                <div class="ai-feed-time">5 ч назад</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Рейтинг команды</h2>
+            <span class="card-hint">активность за 7 дней</span>
+          </div>
+          <ul class="leaderboard">
+            <li class="leaderboard-item leaderboard-item--gold">
+              <span class="lb-rank">1</span>
+              <div class="lb-avatar">А</div>
+              <div class="lb-info">
+                <div class="lb-name">Айгерим К.</div>
+                <div class="lb-bar-wrap">
+                  <div class="lb-bar" style="width: 100%"></div>
+                </div>
+              </div>
+              <span class="lb-score">94</span>
+            </li>
+            <li class="leaderboard-item leaderboard-item--silver">
+              <span class="lb-rank">2</span>
+              <div class="lb-avatar">М</div>
+              <div class="lb-info">
+                <div class="lb-name">Максим Р.</div>
+                <div class="lb-bar-wrap">
+                  <div class="lb-bar" style="width: 82%"></div>
+                </div>
+              </div>
+              <span class="lb-score">77</span>
+            </li>
+            <li class="leaderboard-item leaderboard-item--bronze">
+              <span class="lb-rank">3</span>
+              <div class="lb-avatar">Д</div>
+              <div class="lb-info">
+                <div class="lb-name">Дана С.</div>
+                <div class="lb-bar-wrap">
+                  <div class="lb-bar" style="width: 70%"></div>
+                </div>
+              </div>
+              <span class="lb-score">66</span>
+            </li>
+            <li class="leaderboard-item leaderboard-item--you">
+              <span class="lb-rank">4</span>
+              <div class="lb-avatar lb-avatar--you">С</div>
+              <div class="lb-info">
+                <div class="lb-name">Саира С. <span class="you-tag">→ вы</span></div>
+                <div class="lb-bar-wrap">
+                  <div class="lb-bar lb-bar--you" style="width: 62%"></div>
+                </div>
+              </div>
+              <span class="lb-score">58</span>
+            </li>
+            <li class="leaderboard-item">
+              <span class="lb-rank">5</span>
+              <div class="lb-avatar">Н</div>
+              <div class="lb-info">
+                <div class="lb-name">Нурлан Б.</div>
+                <div class="lb-bar-wrap">
+                  <div class="lb-bar" style="width: 48%"></div>
+                </div>
+              </div>
+              <span class="lb-score">45</span>
+            </li>
+          </ul>
+          <p class="lb-disclaimer">* Отображаются только имя и первая буква фамилии</p>
+        </div>
+
+        <!-- MLM Math -->
+        <div class="card card--math">
+          <div class="card-header">
+            <h2 class="card-title">Математика роста 3×3×3</h2>
+            <span class="card-hint">по Шрайтеру</span>
+          </div>
+          <div class="math-grid">
+            <div class="math-level">
+              <div class="math-num">3</div>
+              <div class="math-label">1 уровень</div>
+              <div class="math-sublabel">прямые партнёры</div>
+            </div>
+            <div class="math-arrow">→</div>
+            <div class="math-level">
+              <div class="math-num">9</div>
+              <div class="math-label">2 уровень</div>
+              <div class="math-sublabel">3×3</div>
+            </div>
+            <div class="math-arrow">→</div>
+            <div class="math-level">
+              <div class="math-num">27</div>
+              <div class="math-label">3 уровень</div>
+              <div class="math-sublabel">3×3×3</div>
+            </div>
+          </div>
+          <div class="math-total">
+            <span class="math-total-num">39</span>
+            <span class="math-total-label">человек в структуре</span>
+          </div>
+          <p class="math-disclaimer">* Результаты индивидуальны. Система не гарантирует доход.</p>
+        </div>
+
+        <!-- Event Log -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Лента событий</h2>
+            <a href="#" class="card-link" data-tab="history">Вся история →</a>
+          </div>
+          <ul class="event-feed">
+            <li class="event-item">
+              <span class="event-dot event-dot--lead"></span>
+              <div class="event-body">
+                <div class="event-text">Новый лид с лендинга — <strong>Арман Касенов</strong></div>
+                <div class="event-time">сегодня, 11:42</div>
+              </div>
+            </li>
+            <li class="event-item">
+              <span class="event-dot event-dot--ai"></span>
+              <div class="event-body">
+                <div class="event-text">AI отправил follow-up — <strong>Гульнара Маратова</strong></div>
+                <div class="event-time">сегодня, 10:15</div>
+              </div>
+            </li>
+            <li class="event-item">
+              <span class="event-dot event-dot--convert"></span>
+              <div class="event-body">
+                <div class="event-text">Лид конвертирован в контакт — <strong>Асель Нурова</strong></div>
+                <div class="event-time">сегодня, 09:30</div>
+              </div>
+            </li>
+            <li class="event-item">
+              <span class="event-dot event-dot--task"></span>
+              <div class="event-body">
+                <div class="event-text">Создана задача: звонок <strong>Дмитрию Романову</strong></div>
+                <div class="event-time">сегодня, 09:00</div>
+              </div>
+            </li>
+            <li class="event-item">
+              <span class="event-dot event-dot--lead"></span>
+              <div class="event-body">
+                <div class="event-text">Новый лид с лендинга — <strong>Зарина Бекова</strong></div>
+                <div class="event-time">вчера, 22:18</div>
+              </div>
+            </li>
+            <li class="event-item">
+              <span class="event-dot event-dot--ai"></span>
+              <div class="event-body">
+                <div class="event-text">AI квалифицировал 3 лидов — приоритет расставлен</div>
+                <div class="event-time">вчера, 21:00</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TABs: заглушки для остальных вкладок -->
+    <div class="tab-content" id="tab-leads">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Лиды</h1>
+          <p class="page-date">Только с лендинга — создать вручную нельзя</p>
+        </div>
+      </div>
+
+      <!-- Stat counters -->
+      <div class="contacts-stats">
+        <button class="cstat active" data-lead-filter="all">
+          <span class="cstat-num" id="lcnt-all">0</span>
+          <span class="cstat-label">Все</span>
+        </button>
+        <button class="cstat" data-lead-filter="new">
+          <span class="cstat-num" id="lcnt-new">0</span>
+          <span class="cstat-label">🆕 Новые</span>
+        </button>
+        <button class="cstat" data-lead-filter="in_work">
+          <span class="cstat-num" id="lcnt-in_work">0</span>
+          <span class="cstat-label">⚡ В работе</span>
+        </button>
+        <button class="cstat" data-lead-filter="handed_to_ai">
+          <span class="cstat-num" id="lcnt-handed_to_ai">0</span>
+          <span class="cstat-label">🤖 У AI</span>
+        </button>
+        <button class="cstat cstat--warm" data-lead-filter="converted">
+          <span class="cstat-num" id="lcnt-converted">0</span>
+          <span class="cstat-label">✅ Конвертированы</span>
+        </button>
+        <button class="cstat cstat--archived" data-lead-filter="rejected">
+          <span class="cstat-num" id="lcnt-rejected">0</span>
+          <span class="cstat-label">❌ Отклонены</span>
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="contacts-search-row">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="search-input" id="lead-search" type="text" placeholder="Поиск по имени, телефону, стране...">
+        </div>
+        <div class="contacts-count-label">
+          Показано: <span id="leads-shown">0</span>
+        </div>
+      </div>
+
+      <!-- Leads Table -->
+      <div class="contacts-table-wrap">
+        <table class="contacts-table" id="leads-table">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Телефон</th>
+              <th>Мессенджер</th>
+              <th>Страна / Город</th>
+              <th>Статус</th>
+              <th>Реф. код</th>
+              <th>Дата</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: LEAD DETAIL ===== -->
+    <div class="modal-overlay" id="modal-lead-detail">
+      <div class="modal-box modal-box--detail">
+        <div class="modal-header">
+          <h2 class="modal-title" id="lead-detail-name">—</h2>
+          <button class="modal-close-btn" id="modal-close-lead">✕</button>
+        </div>
+        <div id="lead-detail-body"></div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-contacts">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Контакты</h1>
+          <p class="page-date">Личная база партнёра</p>
+        </div>
+        <div class="contacts-header-actions">
+          <div class="import-dropdown" id="import-dropdown">
+            <button class="btn-import" id="import-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Импорт ▾
+            </button>
+            <div class="import-menu" id="import-menu">
+              <button class="import-option" data-type="csv">
+                <span>📄</span> CSV файл
+              </button>
+              <button class="import-option" data-type="vcf">
+                <span>📱</span> VCF (телефонная книга)
+              </button>
+              <button class="import-option" data-type="sheets">
+                <span>📊</span> Google Sheets
+              </button>
+            </div>
+          </div>
+          <button class="btn-add-contact" id="btn-add-contact">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Добавить
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat counters -->
+      <div class="contacts-stats">
+        <button class="cstat active" data-filter="all">
+          <span class="cstat-num" id="cnt-all">15</span>
+          <span class="cstat-label">Всего</span>
+        </button>
+        <button class="cstat cstat--hot" data-filter="hot">
+          <span class="cstat-num" id="cnt-hot">4</span>
+          <span class="cstat-label">🔥 Горячие</span>
+        </button>
+        <button class="cstat cstat--warm" data-filter="warm">
+          <span class="cstat-num" id="cnt-warm">6</span>
+          <span class="cstat-label">🌡 Тёплые</span>
+        </button>
+        <button class="cstat cstat--cold" data-filter="cold">
+          <span class="cstat-num" id="cnt-cold">4</span>
+          <span class="cstat-label">❄ Холодные</span>
+        </button>
+        <button class="cstat cstat--archived" data-filter="archived">
+          <span class="cstat-num" id="cnt-archived">1</span>
+          <span class="cstat-label">📦 Архив</span>
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="contacts-search-row">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="search-input" id="contact-search" type="text" placeholder="Поиск по имени, телефону, городу...">
+        </div>
+        <div class="contacts-count-label">
+          Показано: <span id="contacts-shown">15</span>
+        </div>
+      </div>
+
+      <!-- Contacts Table -->
+      <div class="contacts-table-wrap">
+        <table class="contacts-table" id="contacts-table">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Телефон</th>
+              <th>Мессенджер</th>
+              <th>Город</th>
+              <th>Статус</th>
+              <th>AI</th>
+              <th>Заметка</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: ADD CONTACT ===== -->
+    <div class="modal-overlay" id="modal-add-contact">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 class="modal-title">Добавить контакт</h2>
+          <button class="modal-close-btn" id="modal-close-add">✕</button>
+        </div>
+        <form id="form-add-contact" class="contact-form">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Имя <span class="req">*</span></label>
+              <input type="text" name="first_name" required placeholder="Айгерим">
+            </div>
+            <div class="form-group">
+              <label>Фамилия</label>
+              <input type="text" name="last_name" placeholder="Касымова">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Телефон <span class="req">*</span></label>
+              <input type="tel" name="phone" required placeholder="+7XXXXXXXXXX">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="email" placeholder="email@example.com">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Мессенджер</label>
+              <select name="messenger">
+                <option value="">—</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="telegram">Telegram</option>
+                <option value="instagram">Instagram</option>
+                <option value="viber">Viber</option>
+                <option value="other">Другое</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ник / номер</label>
+              <input type="text" name="messenger_handle" placeholder="@username">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Город</label>
+              <input type="text" name="city" placeholder="Алматы">
+            </div>
+            <div class="form-group">
+              <label>Страна</label>
+              <input type="text" name="country" placeholder="Казахстан">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Статус</label>
+              <select name="status">
+                <option value="warm">🌡 Тёплый</option>
+                <option value="hot">🔥 Горячий</option>
+                <option value="cold">❄ Холодный</option>
+              </select>
+            </div>
+            <div class="form-group form-group--ai">
+              <label>Передать AI агенту</label>
+              <label class="toggle-switch">
+                <input type="checkbox" name="selected_for_ai">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Заметка</label>
+            <textarea name="notes" rows="2" placeholder="Откуда знаю, интересы, когда связаться..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="modal-cancel-add">Отмена</button>
+            <button type="submit" class="btn-save">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: CONTACT DETAIL ===== -->
+    <div class="modal-overlay" id="modal-contact-detail">
+      <div class="modal-box modal-box--detail">
+        <div class="modal-header">
+          <h2 class="modal-title" id="detail-name">—</h2>
+          <button class="modal-close-btn" id="modal-close-detail">✕</button>
+        </div>
+        <div class="detail-body" id="detail-body"></div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-tasks">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Задачи</h1>
+          <p class="page-date" id="tasks-date">—</p>
+        </div>
+        <button class="btn-add-contact" id="btn-add-task">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Добавить задачу
+        </button>
+      </div>
+
+      <!-- Task stat counters -->
+      <div class="contacts-stats">
+        <button class="cstat active" data-task-filter="all">
+          <span class="cstat-num" id="tcnt-all">0</span>
+          <span class="cstat-label">Все</span>
+        </button>
+        <button class="cstat" data-task-filter="today">
+          <span class="cstat-num" id="tcnt-today">0</span>
+          <span class="cstat-label">📅 Сегодня</span>
+        </button>
+        <button class="cstat cstat--hot" data-task-filter="overdue">
+          <span class="cstat-num" id="tcnt-overdue">0</span>
+          <span class="cstat-label">🔴 Просрочены</span>
+        </button>
+        <button class="cstat cstat--warm" data-task-filter="ai">
+          <span class="cstat-num" id="tcnt-ai">0</span>
+          <span class="cstat-label">🤖 От AI</span>
+        </button>
+        <button class="cstat cstat--archived" data-task-filter="done">
+          <span class="cstat-num" id="tcnt-done">0</span>
+          <span class="cstat-label">✅ Выполнены</span>
+        </button>
+      </div>
+
+      <!-- Tasks list -->
+      <div class="tasks-columns">
+
+        <!-- Pending -->
+        <div class="tasks-col">
+          <div class="tasks-col-header">
+            <span class="tasks-col-title">К выполнению</span>
+            <span class="tasks-col-count" id="tasks-pending-count">0</span>
+          </div>
+          <div class="tasks-list" id="tasks-pending"></div>
+        </div>
+
+        <!-- Done -->
+        <div class="tasks-col">
+          <div class="tasks-col-header">
+            <span class="tasks-col-title">Выполнено сегодня</span>
+            <span class="tasks-col-count" id="tasks-done-count">0</span>
+          </div>
+          <div class="tasks-list" id="tasks-done"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== MODAL: PARTNER DETAIL ===== -->
+    <div class="modal-overlay" id="modal-partner-detail">
+      <div class="modal-box modal-box--detail">
+        <div class="modal-header">
+          <h2 class="modal-title" id="partner-detail-name">—</h2>
+          <button class="modal-close-btn" id="modal-close-partner">✕</button>
+        </div>
+        <div id="partner-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: ADD TASK ===== -->
+    <div class="modal-overlay" id="modal-add-task">
+      <div class="modal-box" style="max-width:440px">
+        <div class="modal-header">
+          <h2 class="modal-title">Новая задача</h2>
+          <button class="modal-close-btn" id="modal-close-task">✕</button>
+        </div>
+        <form id="form-add-task" class="contact-form">
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Задача <span class="req">*</span></label>
+            <input type="text" name="title" required placeholder="Позвонить Айгерим...">
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Дата</label>
+              <input type="date" name="due_date" id="task-due-date">
+            </div>
+            <div class="form-group">
+              <label>Время</label>
+              <input type="time" name="due_time" placeholder="14:00">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Приоритет</label>
+              <select name="priority">
+                <option value="normal">Обычный</option>
+                <option value="high">🔴 Высокий</option>
+                <option value="low">🔵 Низкий</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Связан с</label>
+              <input type="text" name="related_to" placeholder="Имя контакта / лида">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Заметка</label>
+            <textarea name="notes" rows="2" placeholder="Детали задачи..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="task-cancel">Отмена</button>
+            <button type="submit" class="btn-save">Создать</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-structure">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Структура</h1>
+          <p class="page-date">Ваша команда InCruises</p>
+        </div>
+        <div class="struct-view-toggle">
+          <button class="hfilter-btn active" id="view-tree">🌲 Дерево</button>
+          <button class="hfilter-btn" id="view-table">📋 Список</button>
+        </div>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--leads">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
+              <line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="13" x2="5" y2="17"/>
+              <line x1="12" y1="13" x2="19" y2="17"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value">3</div>
+            <div class="stat-label">Уровней в структуре</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--contacts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value">12</div>
+            <div class="stat-label">Партнёров всего</div>
+          </div>
+          <div class="stat-trend stat-trend--up">+2 ↑</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--tasks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value">9</div>
+            <div class="stat-label">Активных партнёров</div>
+          </div>
+          <div class="stat-trend stat-trend--up">75% ↑</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--conversion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value">39</div>
+            <div class="stat-label">Потенциал 3×3×3</div>
+          </div>
+          <div class="stat-trend stat-trend--neutral">цель</div>
+        </div>
+      </div>
+
+      <!-- Tree view -->
+      <div id="struct-tree-view">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <h2 class="card-title">Дерево команды</h2>
+            <span class="card-hint">нажмите на партнёра для деталей</span>
+          </div>
+          <div class="org-tree" id="org-tree"></div>
+        </div>
+      </div>
+
+      <!-- Table view -->
+      <div id="struct-table-view" style="display:none">
+        <div class="contacts-table-wrap">
+          <table class="contacts-table">
+            <thead>
+              <tr>
+                <th>Партнёр</th>
+                <th>Уровень</th>
+                <th>Спонсор</th>
+                <th>Реф. код</th>
+                <th>Лидов</th>
+                <th>Контактов</th>
+                <th>Активность</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody id="struct-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Calculator -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <h2 class="card-title">Калькулятор роста</h2>
+          <span class="card-hint">по методике Дона Файла</span>
+        </div>
+        <div class="calc-grid">
+          <div class="calc-inputs">
+            <div class="calc-row">
+              <label class="calc-label">Партнёров на 1-м уровне</label>
+              <div class="calc-input-row">
+                <button class="calc-btn" data-level="1" data-dir="-1">−</button>
+                <span class="calc-val" id="calc-l1">3</span>
+                <button class="calc-btn" data-level="1" data-dir="1">+</button>
+              </div>
+            </div>
+            <div class="calc-row">
+              <label class="calc-label">Каждый приводит на 2-м уровне</label>
+              <div class="calc-input-row">
+                <button class="calc-btn" data-level="2" data-dir="-1">−</button>
+                <span class="calc-val" id="calc-l2">3</span>
+                <button class="calc-btn" data-level="2" data-dir="1">+</button>
+              </div>
+            </div>
+            <div class="calc-row">
+              <label class="calc-label">Каждый приводит на 3-м уровне</label>
+              <div class="calc-input-row">
+                <button class="calc-btn" data-level="3" data-dir="-1">−</button>
+                <span class="calc-val" id="calc-l3">3</span>
+                <button class="calc-btn" data-level="3" data-dir="1">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="calc-result" id="calc-result"></div>
+        </div>
+        <p class="math-disclaimer" style="margin-top:16px">* Результаты индивидуальны. Система не гарантирует доход.</p>
+      </div>
+
+    </div>
+    <div class="tab-content" id="tab-history">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">История</h1>
+          <p class="page-date">Только чтение — полный журнал событий системы</p>
+        </div>
+        <div class="history-export">
+          <button class="btn-import" id="btn-export-log">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Экспорт CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters row -->
+      <div class="history-filters">
+        <div class="hfilter-group">
+          <span class="hfilter-label">Тип:</span>
+          <div class="hfilter-btns" id="hfilter-type">
+            <button class="hfilter-btn active" data-htype="all">Все</button>
+            <button class="hfilter-btn" data-htype="lead">Лиды</button>
+            <button class="hfilter-btn" data-htype="contact">Контакты</button>
+            <button class="hfilter-btn" data-htype="task">Задачи</button>
+            <button class="hfilter-btn" data-htype="ai_job">AI агент</button>
+            <button class="hfilter-btn" data-htype="system">Система</button>
+          </div>
+        </div>
+        <div class="hfilter-group">
+          <span class="hfilter-label">Кто:</span>
+          <div class="hfilter-btns" id="hfilter-by">
+            <button class="hfilter-btn active" data-hby="all">Все</button>
+            <button class="hfilter-btn" data-hby="partner">Партнёр</button>
+            <button class="hfilter-btn" data-hby="ai">AI</button>
+            <button class="hfilter-btn" data-hby="system">Система</button>
+          </div>
+        </div>
+        <div class="search-wrap" style="max-width:280px">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="search-input" id="history-search" placeholder="Поиск по событиям...">
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="history-stats" id="history-stats"></div>
+
+      <!-- Timeline -->
+      <div class="history-timeline" id="history-timeline"></div>
+
+    </div>
+    <div class="tab-content" id="tab-learning">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Обучение</h1>
+          <p class="page-date">Модули, уроки и чек-листы</p>
+        </div>
+        <div class="struct-view-toggle">
+          <button class="hfilter-btn active" id="learn-view-modules">📚 Модули</button>
+          <button class="hfilter-btn" id="learn-view-checklists">✅ Чек-листы</button>
+        </div>
+      </div>
+
+      <!-- Progress overview -->
+      <div class="learn-progress-bar-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;color:var(--color-muted)">Общий прогресс обучения</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--color-accent)" id="learn-progress-label">0 / 0 уроков</span>
+        </div>
+        <div style="height:6px;background:rgba(168,197,188,0.08);border-radius:3px;overflow:hidden">
+          <div id="learn-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#0B3D2E,#A8C5BC);border-radius:3px;transition:width 0.5s"></div>
+        </div>
+      </div>
+
+      <!-- Modules view -->
+      <div id="learn-modules-view">
+        <div class="learn-modules-grid" id="learn-modules-grid"></div>
+      </div>
+
+      <!-- Lesson detail view -->
+      <div id="learn-lesson-view" style="display:none">
+        <button class="btn-back" id="btn-back-modules">← Назад к модулям</button>
+        <div id="learn-lesson-content"></div>
+      </div>
+
+      <!-- Checklists view -->
+      <div id="learn-checklists-view" style="display:none">
+        <div class="checklists-grid" id="checklists-grid"></div>
+      </div>
+
+    </div>
+    <div class="tab-content" id="tab-templates">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Шаблоны</h1>
+          <p class="page-date">AI отправляет сообщения только по этим шаблонам</p>
+        </div>
+        <button class="btn-add-contact" id="btn-add-template">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Новый шаблон
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="history-filters" style="margin-bottom:20px">
+        <div class="hfilter-group">
+          <span class="hfilter-label">Категория:</span>
+          <div class="hfilter-btns">
+            <button class="hfilter-btn active" data-tcat="all">Все</button>
+            <button class="hfilter-btn" data-tcat="greeting">👋 Приветствие</button>
+            <button class="hfilter-btn" data-tcat="follow_up">🔄 Follow-up</button>
+            <button class="hfilter-btn" data-tcat="qualify">🔍 Квалификация</button>
+            <button class="hfilter-btn" data-tcat="conversion">✅ Конверсия</button>
+            <button class="hfilter-btn" data-tcat="rejection">❌ Отказ</button>
+          </div>
+        </div>
+        <div class="hfilter-group">
+          <span class="hfilter-label">Канал:</span>
+          <div class="hfilter-btns">
+            <button class="hfilter-btn active" data-tchannel="all">Все</button>
+            <button class="hfilter-btn" data-tchannel="whatsapp">💬 WhatsApp</button>
+            <button class="hfilter-btn" data-tchannel="telegram">✈️ Telegram</button>
+            <button class="hfilter-btn" data-tchannel="email">📧 Email</button>
+          </div>
+        </div>
+        <div class="hfilter-group">
+          <span class="hfilter-label">Язык:</span>
+          <div class="hfilter-btns">
+            <button class="hfilter-btn active" data-tlang="all">Все</button>
+            <button class="hfilter-btn" data-tlang="ru">RU</button>
+            <button class="hfilter-btn" data-tlang="kz">KZ</button>
+            <button class="hfilter-btn" data-tlang="en">EN</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Templates grid -->
+      <div class="templates-grid" id="templates-grid"></div>
+
+    </div>
+
+    <!-- ===== MODAL: TEMPLATE PREVIEW ===== -->
+    <div class="modal-overlay" id="modal-template-preview">
+      <div class="modal-box" style="max-width:560px">
+        <div class="modal-header">
+          <h2 class="modal-title" id="tpl-preview-title">—</h2>
+          <button class="modal-close-btn" id="modal-close-tpl-preview">✕</button>
+        </div>
+        <div id="tpl-preview-body"></div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: ADD/EDIT TEMPLATE ===== -->
+    <div class="modal-overlay" id="modal-template-form">
+      <div class="modal-box" style="max-width:540px">
+        <div class="modal-header">
+          <h2 class="modal-title" id="tpl-form-title">Новый шаблон</h2>
+          <button class="modal-close-btn" id="modal-close-tpl-form">✕</button>
+        </div>
+        <form id="form-template" class="contact-form">
+          <input type="hidden" id="tpl-edit-id" value="">
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Название <span class="req">*</span></label>
+            <input type="text" name="title" required placeholder="Приветствие для WhatsApp">
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Категория</label>
+              <select name="category">
+                <option value="greeting">👋 Приветствие</option>
+                <option value="follow_up">🔄 Follow-up</option>
+                <option value="qualify">🔍 Квалификация</option>
+                <option value="conversion">✅ Конверсия</option>
+                <option value="rejection">❌ Отказ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Канал</label>
+              <select name="channel">
+                <option value="any">Любой</option>
+                <option value="whatsapp">💬 WhatsApp</option>
+                <option value="telegram">✈️ Telegram</option>
+                <option value="email">📧 Email</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Язык</label>
+              <select name="language">
+                <option value="ru">RU — Русский</option>
+                <option value="kz">KZ — Қазақша</option>
+                <option value="en">EN — English</option>
+              </select>
+            </div>
+            <div class="form-group form-group--ai">
+              <label>Активен для AI</label>
+              <label class="toggle-switch">
+                <input type="checkbox" name="is_active" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Текст сообщения <span class="req">*</span></label>
+            <textarea name="content" rows="5" required
+              placeholder="Привет, {{имя}}! Меня зовут {{партнёр}}..."></textarea>
+            <div style="font-size:11px;color:var(--color-muted);margin-top:4px">
+              Переменные: <code style="color:var(--color-accent)">{{имя}}</code> · <code style="color:var(--color-accent)">{{партнёр}}</code> · <code style="color:var(--color-accent)">{{ссылка}}</code>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="tpl-form-cancel">Отмена</button>
+            <button type="submit" class="btn-save">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-settings">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Настройки</h1>
+          <p class="page-date">Профиль, AI агент, уведомления</p>
+        </div>
+        <button class="btn-add-contact" id="btn-save-settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Сохранить
+        </button>
+      </div>
+
+      <div class="settings-layout">
+
+        <!-- LEFT COLUMN -->
+        <div class="settings-col">
+
+          <!-- Profile -->
+          <div class="card settings-card">
+            <div class="card-header"><h2 class="card-title">👤 Профиль партнёра</h2></div>
+
+            <div class="profile-avatar-row">
+              <div class="profile-avatar" id="profile-avatar-display">С</div>
+              <div>
+                <div style="font-size:14px;color:var(--color-text);font-weight:500">Саира Султанова</div>
+                <div style="font-size:12px;color:var(--color-accent);font-family:var(--font-mono)">owner</div>
+                <button class="btn-tpl" style="margin-top:8px;padding:5px 12px">Сменить фото</button>
+              </div>
+            </div>
+
+            <div class="settings-form">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Имя <span class="req">*</span></label>
+                  <input type="text" id="s-first-name" value="Саира">
+                </div>
+                <div class="form-group">
+                  <label>Фамилия</label>
+                  <input type="text" id="s-last-name" value="Султанова">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="s-email" value="info@sairateam.com">
+              </div>
+              <div class="form-group">
+                <label>Телефон</label>
+                <input type="tel" id="s-phone" value="+7 (701) 406-67-52">
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Город</label>
+                  <input type="text" id="s-city" value="Актобе">
+                </div>
+                <div class="form-group">
+                  <label>Страна</label>
+                  <input type="text" id="s-country" value="Казахстан">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Referral link -->
+          <div class="card settings-card">
+            <div class="card-header"><h2 class="card-title">🔗 Реферальная ссылка</h2></div>
+
+            <div class="ref-code-display">
+              <div style="font-size:11px;color:var(--color-muted);font-family:var(--font-mono);margin-bottom:6px">ВАШ КОД</div>
+              <div style="font-family:var(--font-mono);font-size:22px;color:var(--color-accent);letter-spacing:3px;margin-bottom:12px">SAIRA01</div>
+              <div style="font-size:13px;color:var(--color-muted);margin-bottom:12px;word-break:break-all">
+                https://sairateam.com/?ref=SAIRA01
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn-tpl" style="flex:1" id="btn-copy-ref">📋 Копировать ссылку</button>
+                <button class="btn-tpl" style="flex:1" id="btn-copy-code">🔑 Копировать код</button>
+              </div>
+            </div>
+
+            <div class="ref-stats">
+              <div class="ref-stat">
+                <div class="ref-stat-num">47</div>
+                <div class="ref-stat-label">Переходов за месяц</div>
+              </div>
+              <div class="ref-stat">
+                <div class="ref-stat-num">12</div>
+                <div class="ref-stat-label">Заявок с вашей ссылки</div>
+              </div>
+              <div class="ref-stat">
+                <div class="ref-stat-num">3</div>
+                <div class="ref-stat-label">Конвертированных</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security -->
+          <div class="card settings-card">
+            <div class="card-header"><h2 class="card-title">🔒 Безопасность</h2></div>
+            <div class="settings-form">
+              <div class="form-group">
+                <label>Текущий пароль</label>
+                <input type="password" placeholder="••••••••">
+              </div>
+              <div class="form-group">
+                <label>Новый пароль</label>
+                <input type="password" placeholder="Минимум 8 символов">
+              </div>
+              <div class="form-group">
+                <label>Повторите пароль</label>
+                <input type="password" placeholder="••••••••">
+              </div>
+              <button class="btn-tpl" style="width:100%;padding:10px">🔑 Сменить пароль</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="settings-col">
+
+          <!-- AI Agent settings -->
+          <div class="card settings-card">
+            <div class="card-header">
+              <h2 class="card-title">🤖 AI Агент</h2>
+              <div class="ai-status" id="ai-global-status" style="padding:6px 14px">
+                <span class="ai-dot"></span>
+                <span class="ai-label" style="font-size:11px">Активен</span>
+              </div>
+            </div>
+
+            <div class="settings-toggles">
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">AI агент включён</div>
+                  <div class="stg-desc">Агент автоматически обрабатывает лиды и контакты</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="ai-enabled" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Автоматическое приветствие</div>
+                  <div class="stg-desc">Отправлять первое сообщение новым лидам автоматически</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="ai-auto-greeting" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Follow-up напоминания</div>
+                  <div class="stg-desc">AI создаёт задачи если лид не ответил 2+ дня</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="ai-followup" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Ночной режим</div>
+                  <div class="stg-desc">Не отправлять сообщения с 23:00 до 08:00</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="ai-night-mode" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-form" style="margin-top:16px">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Рабочие часы — начало</label>
+                  <input type="time" id="ai-work-from" value="09:00">
+                </div>
+                <div class="form-group">
+                  <label>Рабочие часы — конец</label>
+                  <input type="time" id="ai-work-to" value="21:00">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Задержка первого ответа</label>
+                <select id="ai-delay">
+                  <option value="0">Мгновенно</option>
+                  <option value="5" selected>5 минут (рекомендуется)</option>
+                  <option value="15">15 минут</option>
+                  <option value="30">30 минут</option>
+                  <option value="60">1 час</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Язык AI по умолчанию</label>
+                <select id="ai-lang">
+                  <option value="ru" selected>Русский</option>
+                  <option value="kz">Қазақша</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Максимум контактов у AI одновременно</label>
+                <select id="ai-max-contacts">
+                  <option value="10">10 контактов</option>
+                  <option value="25" selected>25 контактов</option>
+                  <option value="50">50 контактов</option>
+                  <option value="100">100 контактов</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="card settings-card">
+            <div class="card-header"><h2 class="card-title">🔔 Уведомления</h2></div>
+            <div class="settings-toggles">
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Новый лид с лендинга</div>
+                  <div class="stg-desc">Мгновенное уведомление о новой заявке</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Действия AI агента</div>
+                  <div class="stg-desc">Когда AI отправил сообщение или создал задачу</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Новый партнёр в команде</div>
+                  <div class="stg-desc">Когда кто-то зарегистрировался по вашей ссылке</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Просроченные задачи</div>
+                  <div class="stg-desc">Напоминание если задача не выполнена в срок</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+              <div class="settings-toggle-row">
+                <div>
+                  <div class="stg-label">Еженедельная аналитика</div>
+                  <div class="stg-desc">Отчёт по понедельникам в 09:00</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger zone -->
+          <div class="card settings-card settings-card--danger">
+            <div class="card-header"><h2 class="card-title" style="color:#E74C3C">⚠️ Опасная зона</h2></div>
+            <p style="font-size:13px;color:var(--color-muted);margin-bottom:16px">
+              Эти действия необратимы. Будьте осторожны.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn-danger-action">🗑 Очистить архивных лидов</button>
+              <button class="btn-danger-action">📤 Экспортировать все данные</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Save toast -->
+      <div class="settings-toast" id="settings-toast">✅ Настройки сохранены</div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Баннер ошибок БД (скрыт по умолчанию, показывается db.js) -->
+<div id="db-error-banner" style="
+  display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:rgba(30,10,10,0.95); border:1px solid #dc3545; color:#ff6b6b;
+  padding:10px 20px; border-radius:8px; font-size:13px; z-index:9999;
+  font-family:'DM Mono',monospace; max-width:500px; text-align:center;
+"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/dashboard.js"></script>
+<script src="assets/js/db.js"></script>
+</body>
+</html>
