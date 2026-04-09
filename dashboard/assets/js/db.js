@@ -36,21 +36,19 @@ function splitName(fullName) {
 
 // Преобразовать строку из БД leads в формат, понятный renderLeads()
 function mapDbLead(row) {
-  const { first_name, last_name } = splitName(row.name);
   return {
     id:               row.id,
-    first_name:       first_name,
-    last_name:        last_name,
+    first_name:       row.name || '—',
+    last_name:        row.last_name  || '',
     phone:            row.phone  || '',
     email:            row.email  || '',
-    messenger:        '',
-    messenger_handle: '',
-    country:          '',
-    city:             '',
+    messenger:        row.messenger || '',
+    messenger_handle: row.messenger_handle || '',
+    country:          row.country || '',
+    city:             row.city || '',
     referral_code:    row.source || '',
     status:           row.status || 'new',
     created_at:       row.created_at,
-    // Оригинал для операций с БД
     _partner_id:      row.partner_id,
   };
 }
@@ -101,7 +99,7 @@ async function loadLeads(partnerId) {
   try {
     const { data, error } = await window.sb
       .from('leads')
-      .select('id, partner_id, name, phone, email, source, status, created_at')
+      .select('id, partner_id, name, last_name, phone, email, messenger, messenger_handle, country, city, source, status, created_at')
       .eq('partner_id', partnerId)
       .order('created_at', { ascending: false })
       .limit(50);

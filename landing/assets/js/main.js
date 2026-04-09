@@ -448,22 +448,28 @@ function initForm() {
 
     const data = new FormData(form);
 
-    // Маппинг полей формы → схема таблицы leads:
-    // partners: id, partner_id, name, phone, email, source, status, created_at
+    // Маппинг полей формы → РЕАЛЬНАЯ схема таблицы leads в Supabase
+    // leads: id, partner_id, name(NOT NULL), last_name, phone, email,
+    //        source, status, country, city, messenger, messenger_handle,
+    //        consent, consent_at, created_at
     const firstName  = data.get('first_name')?.trim() || '';
     const lastName   = data.get('last_name')?.trim()  || '';
     const partnerId  = data.get('partner_id')?.trim()  || null;
 
     const payload = {
-      // name = Имя + Фамилия
-      name:       [firstName, lastName].filter(Boolean).join(' '),
-      phone:      data.get('phone')?.trim() || null,
-      email:      data.get('email')?.trim() || null,
-      // source = реферальный код партнёра (из URL ?ref=)
-      source:     window._partnerRefCode || getReferralCode() || 'landing',
-      status:     'new',
-      // partner_id устанавливается из скрытого поля после проверки ref
-      partner_id: partnerId || null,
+      name:             firstName || '—',
+      last_name:        lastName || null,
+      phone:            data.get('phone')?.trim() || null,
+      email:            data.get('email')?.trim() || null,
+      country:          data.get('country')?.trim() || null,
+      city:             data.get('city')?.trim() || null,
+      messenger:        data.get('messenger')?.trim() || null,
+      messenger_handle: data.get('messenger_handle')?.trim() || null,
+      source:           window._partnerRefCode || getReferralCode() || 'landing',
+      status:           'new',
+      consent:          true,
+      consent_at:       new Date().toISOString(),
+      partner_id:       partnerId || null,
     };
 
     try {
