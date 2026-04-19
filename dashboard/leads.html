@@ -16,14 +16,14 @@
       <h2>Заявки с лендинга</h2>
       <p>Входящие заявки партнёров. Квалификация, статусы, передача AI. Лиды попадают сюда <b>только через форму</b> sairateam.com.</p>
     </div>
-    <div class="welcome-r"><div class="wdate" id="leads-total-date">Всего: <b>47</b></div></div>
+    <div class="welcome-r"><div class="wdate" id="leads-total-date">Всего: <b id="stat-total">0</b></div></div>
   </div>
 
   <div class="stats">
-    <div class="sc"><div class="sc-top"><div class="sc-icon si1">🆕</div><div class="sc-trend tu">+3</div></div><div class="sc-val">8</div><div class="sc-lbl">Новые</div></div>
-    <div class="sc"><div class="sc-top"><div class="sc-icon si2">📞</div><div class="sc-trend tu">5</div></div><div class="sc-val">12</div><div class="sc-lbl">В работе</div></div>
-    <div class="sc"><div class="sc-top"><div class="sc-icon si3">✅</div><div class="sc-trend tu">+2</div></div><div class="sc-val">15</div><div class="sc-lbl">Квалифицированы</div></div>
-    <div class="sc"><div class="sc-top"><div class="sc-icon si4">🏆</div><div class="sc-trend tu">+1</div></div><div class="sc-val">7</div><div class="sc-lbl">Конверсия</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">🆕</div></div><div class="sc-val" id="stat-new">0</div><div class="sc-lbl">Новые</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">📞</div></div><div class="sc-val" id="stat-contacted">0</div><div class="sc-lbl">В работе</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">✅</div></div><div class="sc-val" id="stat-qualified">0</div><div class="sc-lbl">Квалифицированы</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">🏆</div></div><div class="sc-val" id="stat-converted">0</div><div class="sc-lbl">Конверсия</div></div>
   </div>
 
   <div class="pnl">
@@ -58,21 +58,14 @@
   </div>
 </div>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/dashboard.js"></script>
 <script>
 initDashboard('leads');
+requireAuth();
 
-// ===== MOCK LEADS =====
-const LEADS = [
-  { id:1, name:'Алия',    last_name:'Сатпаева',    phone:'+7 701 234 5678', email:'aliya.s@mail.ru',      city:'Алматы',  country:'KZ', source:'landing', status:'new',        messenger:'whatsapp', messenger_handle:'+77012345678', consent:true, consent_at:'2026-04-18 09:14', created_at:'2026-04-18 09:14' },
-  { id:2, name:'Марат',   last_name:'Кенжебаев',   phone:'+7 705 887 1122', email:'m.kenzhebaev@gmail.com', city:'Астана', country:'KZ', source:'landing', status:'contacted',  messenger:'telegram', messenger_handle:'@marat_k', consent:true, consent_at:'2026-04-17 18:02', created_at:'2026-04-17 18:02' },
-  { id:3, name:'Дана',    last_name:'Турсынова',   phone:'+7 747 330 4411', email:'dana.t@yandex.kz',     city:'Шымкент', country:'KZ', source:'landing', status:'qualified',  messenger:'whatsapp', messenger_handle:'+77473304411', consent:true, consent_at:'2026-04-17 12:40', created_at:'2026-04-17 12:40' },
-  { id:4, name:'Нурлан',  last_name:'Баймухамбетов',phone:'+7 702 556 9900', email:'nurlan.b@inbox.ru',    city:'Караганда',country:'KZ',source:'landing',status:'contacted',  messenger:'instagram',messenger_handle:'@nurlan.b', consent:true, consent_at:'2026-04-16 21:18', created_at:'2026-04-16 21:18' },
-  { id:5, name:'Елена',   last_name:'Морозова',    phone:'+7 906 112 3344', email:'morozova.e@mail.ru',   city:'Москва',  country:'RU', source:'landing', status:'converted',  messenger:'telegram', messenger_handle:'@elena_moroz', consent:true, consent_at:'2026-04-15 10:55', created_at:'2026-04-15 10:55' },
-  { id:6, name:'Ержан',   last_name:'Абдрахманов', phone:'+7 778 445 2211', email:'erzhan.abd@gmail.com', city:'Актобе',  country:'KZ', source:'landing', status:'rejected',   messenger:'whatsapp', messenger_handle:'+77784452211', consent:true, consent_at:'2026-04-14 16:33', created_at:'2026-04-14 16:33' },
-  { id:7, name:'Асель',   last_name:'Жумабекова',  phone:'+7 707 883 7700', email:'asel.zh@mail.ru',      city:'Алматы',  country:'KZ', source:'landing', status:'new',        messenger:'whatsapp', messenger_handle:'+77078837700', consent:true, consent_at:'2026-04-18 07:50', created_at:'2026-04-18 07:50' },
-  { id:8, name:'Тимур',   last_name:'Ахметов',     phone:'+7 701 998 4455', email:'timur.a@gmail.com',    city:'Астана', country:'KZ', source:'landing', status:'qualified',  messenger:'telegram', messenger_handle:'@timur_akh', consent:true, consent_at:'2026-04-16 14:22', created_at:'2026-04-16 14:22' },
-];
+let LEADS = [];
+let currentPartner = null;
 
 const STATUS_MAP = {
   new:        { label:'Новая',          tg:'tg1', dot:'da', icon:'🆕' },
@@ -93,6 +86,25 @@ const MSG_MAP = {
 let currentFilter = 'all';
 let currentSearch = '';
 
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
+  ));
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  return iso.slice(0,10).replace(/-/g,'.');
+}
+
+function renderStats() {
+  const by = s => LEADS.filter(l => l.status === s).length;
+  document.getElementById('stat-total').textContent = LEADS.length;
+  document.getElementById('stat-new').textContent = by('new');
+  document.getElementById('stat-contacted').textContent = by('contacted');
+  document.getElementById('stat-qualified').textContent = by('qualified');
+  document.getElementById('stat-converted').textContent = by('converted');
+}
+
 function renderLeads() {
   const list = document.getElementById('leads-list');
   const empty = document.getElementById('leads-empty');
@@ -101,9 +113,11 @@ function renderLeads() {
   const filtered = LEADS.filter(l => {
     if (currentFilter !== 'all' && l.status !== currentFilter) return false;
     if (!q) return true;
-    const hay = `${l.name} ${l.last_name} ${l.phone} ${l.email} ${l.city}`.toLowerCase();
+    const hay = `${l.name||''} ${l.last_name||''} ${l.phone||''} ${l.email||''} ${l.city||''}`.toLowerCase();
     return hay.includes(q);
   });
+
+  renderStats();
 
   if (filtered.length === 0) {
     list.innerHTML = '';
@@ -113,19 +127,34 @@ function renderLeads() {
   empty.style.display = 'none';
 
   list.innerHTML = filtered.map(l => {
-    const st = STATUS_MAP[l.status];
-    const ms = MSG_MAP[l.messenger] || { label:l.messenger, icon:'💬' };
-    const dateShort = l.created_at.slice(5,10).replace('-','.');
+    const st = STATUS_MAP[l.status] || STATUS_MAP.new;
+    const ms = MSG_MAP[l.messenger] || { label:l.messenger||'—', icon:'💬' };
     return `
-      <div class="ti lead-ti" onclick="openLeadModal(${l.id})">
+      <div class="ti lead-ti" onclick="openLeadModal('${l.id}')">
         <div class="tdot ${st.dot}"></div>
         <div class="ti-b">
-          <div class="ti-t">${l.name} ${l.last_name} <span class="lead-city">· ${l.city}</span></div>
-          <div class="ti-m">${ms.icon} ${l.messenger_handle} · ${l.phone} · ${dateShort}</div>
+          <div class="ti-t">${esc(l.name)} ${esc(l.last_name||'')} <span class="lead-city">· ${esc(l.city||'—')}</span></div>
+          <div class="ti-m">${ms.icon} ${esc(l.messenger_handle||'—')} · ${esc(l.phone||'')} · ${fmtDate(l.created_at)}</div>
         </div>
         <div class="tg ${st.tg}">${st.icon} ${st.label}</div>
       </div>`;
   }).join('');
+}
+
+async function loadLeads() {
+  const list = document.getElementById('leads-list');
+  try {
+    currentPartner = await getCurrentPartner();
+    if (!currentPartner) {
+      list.innerHTML = '<div class="leads-empty"><p>Партнёр не найден. Обратитесь к администратору.</p></div>';
+      return;
+    }
+    LEADS = await sb('GET', `leads?partner_id=eq.${currentPartner.id}&select=*&order=created_at.desc`);
+    renderLeads();
+  } catch (e) {
+    console.error('loadLeads:', e);
+    list.innerHTML = `<div class="leads-empty"><p>Ошибка загрузки: ${esc(e.message)}</p></div>`;
+  }
 }
 
 // ===== Filter / Search =====
@@ -146,35 +175,36 @@ document.getElementById('leads-search').addEventListener('input', e => {
 function openLeadModal(id) {
   const l = LEADS.find(x => x.id === id);
   if (!l) return;
-  const st = STATUS_MAP[l.status];
-  const ms = MSG_MAP[l.messenger] || { label:l.messenger, icon:'💬' };
+  const st = STATUS_MAP[l.status] || STATUS_MAP.new;
+  const ms = MSG_MAP[l.messenger] || { label:l.messenger||'—', icon:'💬' };
+  const initials = `${(l.name||'?')[0]}${(l.last_name||'')[0]||''}`;
   const body = document.getElementById('modal-body');
   body.innerHTML = `
     <div class="modal-head">
-      <div class="la lead-ava">${l.name[0]}${l.last_name[0]}</div>
+      <div class="la lead-ava">${esc(initials)}</div>
       <div>
-        <div class="modal-ttl">${l.name} ${l.last_name}</div>
-        <div class="modal-sub">${l.city}, ${l.country} · заявка от ${l.created_at}</div>
+        <div class="modal-ttl">${esc(l.name)} ${esc(l.last_name||'')}</div>
+        <div class="modal-sub">${esc(l.city||'—')}, ${esc(l.country||'—')} · заявка от ${fmtDate(l.created_at)}</div>
       </div>
       <div class="tg ${st.tg}" style="margin-left:auto">${st.icon} ${st.label}</div>
     </div>
     <div class="modal-grid">
-      <div class="mg-row"><span class="mg-k">📱 Телефон</span><a class="mg-v" href="tel:${l.phone}">${l.phone}</a></div>
-      <div class="mg-row"><span class="mg-k">✉️ Email</span><a class="mg-v" href="mailto:${l.email}">${l.email}</a></div>
-      <div class="mg-row"><span class="mg-k">${ms.icon} Мессенджер</span><span class="mg-v">${ms.label} — ${l.messenger_handle}</span></div>
-      <div class="mg-row"><span class="mg-k">🌍 Локация</span><span class="mg-v">${l.city}, ${l.country}</span></div>
-      <div class="mg-row"><span class="mg-k">📥 Источник</span><span class="mg-v">${l.source}</span></div>
-      <div class="mg-row"><span class="mg-k">✅ Согласие</span><span class="mg-v">${l.consent ? 'Да · ' + l.consent_at : 'Нет'}</span></div>
+      <div class="mg-row"><span class="mg-k">📱 Телефон</span><a class="mg-v" href="tel:${esc(l.phone||'')}">${esc(l.phone||'—')}</a></div>
+      <div class="mg-row"><span class="mg-k">✉️ Email</span><a class="mg-v" href="mailto:${esc(l.email||'')}">${esc(l.email||'—')}</a></div>
+      <div class="mg-row"><span class="mg-k">${ms.icon} Мессенджер</span><span class="mg-v">${ms.label} — ${esc(l.messenger_handle||'—')}</span></div>
+      <div class="mg-row"><span class="mg-k">🌍 Локация</span><span class="mg-v">${esc(l.city||'—')}, ${esc(l.country||'—')}</span></div>
+      <div class="mg-row"><span class="mg-k">📥 Источник</span><span class="mg-v">${esc(l.source||'—')}</span></div>
+      <div class="mg-row"><span class="mg-k">✅ Согласие</span><span class="mg-v">${l.consent ? 'Да · ' + fmtDate(l.consent_at) : 'Нет'}</span></div>
     </div>
     <div class="modal-actions">
-      <button class="mbtn mbtn-p" onclick="changeStatus(${l.id},'contacted')">📞 В работу</button>
-      <button class="mbtn mbtn-g" onclick="changeStatus(${l.id},'qualified')">✅ Квалифицировать</button>
-      <button class="mbtn mbtn-gold" onclick="changeStatus(${l.id},'converted')">🏆 Конверсия</button>
-      <button class="mbtn mbtn-r" onclick="changeStatus(${l.id},'rejected')">❌ Отказ</button>
+      <button class="mbtn mbtn-p" onclick="changeStatus('${l.id}','contacted')">📞 В работу</button>
+      <button class="mbtn mbtn-g" onclick="changeStatus('${l.id}','qualified')">✅ Квалифицировать</button>
+      <button class="mbtn mbtn-gold" onclick="changeStatus('${l.id}','converted')">🏆 Конверсия</button>
+      <button class="mbtn mbtn-r" onclick="changeStatus('${l.id}','rejected')">❌ Отказ</button>
     </div>
     <div class="modal-actions" style="margin-top:8px">
-      <button class="mbtn mbtn-ai" onclick="handAiDraft(${l.id})">🤖 AI-черновик</button>
-      <button class="mbtn mbtn-msg" onclick="openChat(${l.id})">💬 Открыть переписку</button>
+      <button class="mbtn mbtn-ai" onclick="handAiDraft('${l.id}')">🤖 AI-черновик</button>
+      <button class="mbtn mbtn-msg" onclick="openChat('${l.id}')">💬 Открыть переписку</button>
     </div>
   `;
   document.getElementById('lead-modal').classList.add('active');
@@ -182,9 +212,22 @@ function openLeadModal(id) {
 function closeLeadModal() {
   document.getElementById('lead-modal').classList.remove('active');
 }
-function changeStatus(id, newStatus) {
+async function changeStatus(id, newStatus) {
   const l = LEADS.find(x => x.id === id);
-  if (l) { l.status = newStatus; renderLeads(); openLeadModal(id); }
+  if (!l) return;
+  const prev = l.status;
+  l.status = newStatus;
+  renderLeads();
+  openLeadModal(id);
+  try {
+    await sb('PATCH', `leads?id=eq.${id}`, { status: newStatus, updated_at: new Date().toISOString() });
+  } catch (e) {
+    console.error('changeStatus:', e);
+    l.status = prev;
+    renderLeads();
+    openLeadModal(id);
+    showToast('❌ Не удалось сохранить статус: ' + e.message);
+  }
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeLeadModal();
@@ -204,21 +247,17 @@ function showToast(msg) {
   showToast._tid = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// Полуавтомат: запросить черновик у AI (пока заглушка — реальный n8n ниже)
 function handAiDraft(id) {
   const l = LEADS.find(x => x.id === id);
   if (!l) return;
   showToast(`🤖 Запрос черновика для ${l.name}. AI подготовит текст для вашего одобрения.`);
-  // TODO: POST ai_jobs(lead_id=id, type='draft', status='pending') → n8n → LLM → черновик в UI
 }
 
-// Переход на страницу лида (lead.html?id=X пока не создана)
 function openChat(id) {
   showToast('💬 Страница переписки появится после реализации lead.html?id=' + id);
-  // TODO: window.location.href = `lead.html?id=${id}`;
 }
 
-renderLeads();
+loadLeads();
 </script>
 </body>
 </html>

@@ -65,11 +65,14 @@
   </div>
 </div>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/dashboard.js"></script>
 <script>
 initDashboard('contacts');
+requireAuth();
 
-const MY_REF = 'TEST001';
+let CONTACTS = [];
+let currentPartner = null;
 
 const TAG_MAP = {
   family:       { label:'Семья',    icon:'👨‍👩‍👧', tg:'tg1' },
@@ -87,16 +90,20 @@ const MSG_MAP = {
   email:     { label:'Email',     icon:'✉️' },
 };
 
-const CONTACTS = [
-  { id:1, name:'Айгерим',   last_name:'Сулейменова', phone:'+7 701 222 3344', email:'aigerim.s@mail.ru',     messenger:'whatsapp', messenger_handle:'+77012223344', tag:'family',       invited:true,  notes:'Сестра, Алматы',        source:'manual', created_at:'2026-03-12' },
-  { id:2, name:'Бауржан',   last_name:'Омаров',      phone:'+7 705 111 4455', email:'baurzhan.o@gmail.com',  messenger:'telegram', messenger_handle:'@bau_omarov',  tag:'friend',       invited:false, notes:'Универ, группа 2010',   source:'google', created_at:'2026-02-20' },
-  { id:3, name:'Мария',     last_name:'Петрова',     phone:'+7 903 556 7788', email:'m.petrova@yandex.ru',   messenger:'telegram', messenger_handle:'@masha_p',     tag:'work',         invited:true,  notes:'Бывшая коллега',        source:'csv',    created_at:'2026-01-15' },
-  { id:4, name:'Азамат',    last_name:'Кусаинов',    phone:'+7 747 993 1010', email:'azamat.k@inbox.ru',     messenger:'whatsapp', messenger_handle:'+77479931010', tag:'friend',       invited:false, notes:'Школа №24, Актобе',     source:'vcf',    created_at:'2026-01-05' },
-  { id:5, name:'Сауле',     last_name:'Исмагулова',  phone:'+7 702 445 8899', email:'saule.ismagul@mail.ru', messenger:'instagram',messenger_handle:'@saule_is',    tag:'client',       invited:true,  notes:'Круиз 2025, довольна',  source:'manual',created_at:'2025-12-18' },
-  { id:6, name:'Ринат',     last_name:'Токтаров',    phone:'+7 778 332 7700', email:'rinat.t@gmail.com',     messenger:'telegram', messenger_handle:'@rinat_t',     tag:'acquaintance', invited:false, notes:'Фитнес, знакомый',      source:'manual',created_at:'2026-04-02' },
-  { id:7, name:'Гульнара',  last_name:'Нуртасова',   phone:'+7 707 119 2266', email:'gulnara.n@mail.ru',     messenger:'whatsapp', messenger_handle:'+77071192266', tag:'family',       invited:false, notes:'Тётя, Шымкент',         source:'manual',created_at:'2026-03-28' },
-  { id:8, name:'Данияр',    last_name:'Альжанов',    phone:'+7 701 667 4422', email:'daniyar.a@yandex.kz',   messenger:'viber',    messenger_handle:'+77016674422', tag:'work',         invited:true,  notes:'Партнёр по работе',     source:'google',created_at:'2025-11-10' },
-];
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
+  ));
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  return iso.slice(0,10).replace(/-/g,'.');
+}
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return (parts[0]?.[0] || '?') + (parts[1]?.[0] || '');
+}
 
 let tagFilter = 'all';
 let cnSearch = '';
@@ -107,7 +114,7 @@ function updateStats() {
   document.getElementById('st-all').textContent = total;
   document.getElementById('st-wa').textContent = CONTACTS.filter(c => c.messenger === 'whatsapp').length;
   document.getElementById('st-tg').textContent = CONTACTS.filter(c => c.messenger === 'telegram').length;
-  document.getElementById('st-inv').textContent = CONTACTS.filter(c => c.invited).length;
+  document.getElementById('st-inv').textContent = CONTACTS.filter(c => !!c.invited_at).length;
 }
 
 function renderContacts() {
@@ -116,13 +123,15 @@ function renderContacts() {
   const q = cnSearch.toLowerCase().trim();
 
   const filtered = CONTACTS.filter(c => {
-    if (tagFilter === 'invited') { if (!c.invited) return false; }
+    if (tagFilter === 'invited') { if (!c.invited_at) return false; }
     else if (tagFilter !== 'all' && c.tag !== tagFilter) return false;
     if (!q) return true;
     const tg = TAG_MAP[c.tag]?.label || '';
-    const hay = `${c.name} ${c.last_name} ${c.phone} ${c.email} ${c.messenger_handle} ${tg} ${c.notes}`.toLowerCase();
+    const hay = `${c.name||''} ${c.phone||''} ${c.email||''} ${c.messenger_handle||''} ${tg} ${c.notes||''}`.toLowerCase();
     return hay.includes(q);
   });
+
+  updateStats();
 
   if (filtered.length === 0) {
     list.innerHTML = '';
@@ -132,19 +141,35 @@ function renderContacts() {
   empty.style.display = 'none';
 
   list.innerHTML = filtered.map(c => {
-    const t = TAG_MAP[c.tag] || { label:c.tag, icon:'🏷', tg:'tg1' };
-    const m = MSG_MAP[c.messenger] || { label:c.messenger, icon:'💬' };
-    const invIcon = c.invited ? '<span class="cn-inv" title="Приглашение отправлено">📨</span>' : '';
+    const t = TAG_MAP[c.tag] || { label:c.tag||'—', icon:'🏷', tg:'tg1' };
+    const m = MSG_MAP[c.messenger] || { label:c.messenger||'—', icon:'💬' };
+    const invIcon = c.invited_at ? '<span class="cn-inv" title="Приглашение отправлено">📨</span>' : '';
     return `
-      <div class="ti lead-ti" onclick="openCnModal(${c.id})">
-        <div class="la lead-ava" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,var(--ocean),var(--azure))">${c.name[0]}${c.last_name[0]}</div>
+      <div class="ti lead-ti" onclick="openCnModal('${c.id}')">
+        <div class="la lead-ava" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,var(--ocean),var(--azure))">${esc(initials(c.name))}</div>
         <div class="ti-b">
-          <div class="ti-t">${c.name} ${c.last_name} ${invIcon}</div>
-          <div class="ti-m">${m.icon} ${c.messenger_handle} · ${c.phone}</div>
+          <div class="ti-t">${esc(c.name)} ${invIcon}</div>
+          <div class="ti-m">${m.icon} ${esc(c.messenger_handle||'—')} · ${esc(c.phone||'—')}</div>
         </div>
         <div class="tg ${t.tg}">${t.icon} ${t.label}</div>
       </div>`;
   }).join('');
+}
+
+async function loadContacts() {
+  const list = document.getElementById('cn-list');
+  try {
+    currentPartner = await getCurrentPartner();
+    if (!currentPartner) {
+      list.innerHTML = '<div class="leads-empty"><p>Партнёр не найден.</p></div>';
+      return;
+    }
+    CONTACTS = await sb('GET', `contacts?partner_id=eq.${currentPartner.id}&select=*&order=created_at.desc`);
+    renderContacts();
+  } catch (e) {
+    console.error('loadContacts:', e);
+    list.innerHTML = `<div class="leads-empty"><p>Ошибка загрузки: ${esc(e.message)}</p></div>`;
+  }
 }
 
 document.getElementById('cn-tags').addEventListener('click', e => {
@@ -160,35 +185,35 @@ document.getElementById('cn-search').addEventListener('input', e => { cnSearch =
 function openCnModal(id) {
   const c = CONTACTS.find(x => x.id === id);
   if (!c) return;
-  const t = TAG_MAP[c.tag] || { label:c.tag, icon:'🏷', tg:'tg1' };
-  const m = MSG_MAP[c.messenger] || { label:c.messenger, icon:'💬' };
+  const t = TAG_MAP[c.tag] || { label:c.tag||'—', icon:'🏷', tg:'tg1' };
+  const m = MSG_MAP[c.messenger] || { label:c.messenger||'—', icon:'💬' };
   const srcMap = { manual:'Вручную', csv:'CSV импорт', vcf:'VCF (vCard)', google:'Google Contacts' };
   const body = document.getElementById('cn-modal-body');
   body.innerHTML = `
     <div class="modal-head">
-      <div class="la lead-ava">${c.name[0]}${c.last_name[0]}</div>
+      <div class="la lead-ava">${esc(initials(c.name))}</div>
       <div>
-        <div class="modal-ttl">${c.name} ${c.last_name}</div>
-        <div class="modal-sub">${c.notes || '—'}</div>
+        <div class="modal-ttl">${esc(c.name)}</div>
+        <div class="modal-sub">${esc(c.notes || '—')}</div>
       </div>
       <div class="tg ${t.tg}" style="margin-left:auto">${t.icon} ${t.label}</div>
     </div>
     <div class="modal-grid">
-      <div class="mg-row"><span class="mg-k">📱 Телефон</span><a class="mg-v" href="tel:${c.phone}">${c.phone}</a></div>
-      <div class="mg-row"><span class="mg-k">✉️ Email</span><a class="mg-v" href="mailto:${c.email}">${c.email}</a></div>
-      <div class="mg-row"><span class="mg-k">${m.icon} Мессенджер</span><span class="mg-v">${m.label} — ${c.messenger_handle}</span></div>
-      <div class="mg-row"><span class="mg-k">📥 Источник</span><span class="mg-v">${srcMap[c.source] || c.source}</span></div>
-      <div class="mg-row"><span class="mg-k">📨 Приглашён</span><span class="mg-v">${c.invited ? 'Да' : 'Нет'}</span></div>
-      <div class="mg-row"><span class="mg-k">📅 Добавлен</span><span class="mg-v">${c.created_at}</span></div>
+      <div class="mg-row"><span class="mg-k">📱 Телефон</span><a class="mg-v" href="tel:${esc(c.phone||'')}">${esc(c.phone||'—')}</a></div>
+      <div class="mg-row"><span class="mg-k">✉️ Email</span><a class="mg-v" href="mailto:${esc(c.email||'')}">${esc(c.email||'—')}</a></div>
+      <div class="mg-row"><span class="mg-k">${m.icon} Мессенджер</span><span class="mg-v">${m.label} — ${esc(c.messenger_handle||'—')}</span></div>
+      <div class="mg-row"><span class="mg-k">📥 Источник</span><span class="mg-v">${esc(srcMap[c.source] || c.source || '—')}</span></div>
+      <div class="mg-row"><span class="mg-k">📨 Приглашён</span><span class="mg-v">${c.invited_at ? 'Да · ' + fmtDate(c.invited_at) : 'Нет'}</span></div>
+      <div class="mg-row"><span class="mg-k">📅 Добавлен</span><span class="mg-v">${fmtDate(c.created_at)}</span></div>
     </div>
     <div class="modal-actions">
-      <button class="mbtn mbtn-p" onclick="inviteContact(${c.id})">📨 Пригласить</button>
-      <button class="mbtn mbtn-ai" onclick="aiInvite(${c.id})">🤖 AI-приглашение</button>
-      <button class="mbtn mbtn-msg" onclick="contactMessenger(${c.id})">${m.icon} Связаться</button>
+      <button class="mbtn mbtn-p" onclick="inviteContact('${c.id}')">📨 Пригласить</button>
+      <button class="mbtn mbtn-ai" onclick="aiInvite('${c.id}')">🤖 AI-приглашение</button>
+      <button class="mbtn mbtn-msg" onclick="contactMessenger('${c.id}')">${m.icon} Связаться</button>
     </div>
     <div class="modal-actions" style="margin-top:8px">
-      <button class="mbtn mbtn-g" onclick="editContact(${c.id})">✏️ Редактировать</button>
-      <button class="mbtn mbtn-r" onclick="deleteContact(${c.id})">🗑 Удалить</button>
+      <button class="mbtn mbtn-g" onclick="editContact('${c.id}')">✏️ Редактировать</button>
+      <button class="mbtn mbtn-r" onclick="deleteContact('${c.id}')">🗑 Удалить</button>
     </div>
   `;
   document.getElementById('cn-modal').classList.add('active');
@@ -203,15 +228,25 @@ function showToast(msg) {
   showToast._tid = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function inviteContact(id) {
+async function inviteContact(id) {
   const c = CONTACTS.find(x => x.id === id);
   if (!c) return;
-  const link = `https://sairateam.com/?ref=${MY_REF}`;
+  const ref = currentPartner?.ref_code || '';
+  const link = `https://sairateam.com/?ref=${ref}`;
   if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
-  c.invited = true;
-  renderContacts(); updateStats();
+  const prev = c.invited_at;
+  const now = new Date().toISOString();
+  c.invited_at = now;
+  renderContacts();
   openCnModal(id);
-  showToast(`📨 Реф-ссылка скопирована: ${link}`);
+  try {
+    await sb('PATCH', `contacts?id=eq.${id}`, { invited_at: now, updated_at: now });
+    showToast(`📨 Реф-ссылка скопирована: ${link}`);
+  } catch (e) {
+    c.invited_at = prev;
+    renderContacts(); openCnModal(id);
+    showToast('❌ Не удалось сохранить: ' + e.message);
+  }
 }
 
 function aiInvite(id) {
@@ -222,11 +257,11 @@ function aiInvite(id) {
 
 function contactMessenger(id) {
   const c = CONTACTS.find(x => x.id === id);
-  if (!c) return;
+  if (!c || !c.messenger_handle) { showToast('Нет контакта в мессенджере'); return; }
   let url = '';
   if (c.messenger === 'whatsapp') url = `https://wa.me/${c.messenger_handle.replace(/\D/g,'')}`;
   else if (c.messenger === 'telegram') url = `https://t.me/${c.messenger_handle.replace(/^@/,'')}`;
-  else if (c.messenger === 'email') url = `mailto:${c.email}`;
+  else if (c.messenger === 'email' && c.email) url = `mailto:${c.email}`;
   else if (c.messenger === 'viber') url = `viber://chat?number=${encodeURIComponent(c.messenger_handle)}`;
   else if (c.messenger === 'instagram') url = `https://instagram.com/${c.messenger_handle.replace(/^@/,'')}`;
   if (url) window.open(url, '_blank');
@@ -236,19 +271,23 @@ function contactMessenger(id) {
 function editContact(id) {
   showToast('✏️ Форма редактирования появится в следующей итерации.');
 }
-function deleteContact(id) {
+async function deleteContact(id) {
   const c = CONTACTS.find(x => x.id === id);
   if (!c) return;
-  if (!confirm(`Удалить контакт "${c.name} ${c.last_name}"?`)) return;
-  const idx = CONTACTS.findIndex(x => x.id === id);
-  CONTACTS.splice(idx, 1);
-  closeCnModal();
-  renderContacts(); updateStats();
-  showToast('🗑 Контакт удалён');
+  if (!confirm(`Удалить контакт "${c.name}"?`)) return;
+  try {
+    await sb('DELETE', `contacts?id=eq.${id}`);
+    CONTACTS = CONTACTS.filter(x => x.id !== id);
+    closeCnModal();
+    renderContacts();
+    showToast('🗑 Контакт удалён');
+  } catch (e) {
+    showToast('❌ Не удалось удалить: ' + e.message);
+  }
 }
 
 function openAddContact() {
-  showToast('➕ Форма добавления появится после миграции таблицы contacts.');
+  showToast('➕ Форма добавления появится в следующей итерации.');
 }
 function openImport() {
   showToast('📥 Импорт CSV / VCF / Google Contacts — отдельная итерация.');
@@ -256,8 +295,7 @@ function openImport() {
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCnModal(); });
 
-updateStats();
-renderContacts();
+loadContacts();
 </script>
 </body>
 </html>
