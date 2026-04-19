@@ -60,8 +60,8 @@ Landing (sairateam.com) → Supabase (leads) → n8n (VPS) → AI Agent → Chan
 - [x] [[Referral System]] — ref_code работает
 - [x] [[Dashboard]] — 9 вкладок заполнены на mock-данных
 - [x] DB-схема под все 9 вкладок (2026-04-19, 9 миграций)
-- [ ] Переключение вкладок на реальные supabase-js запросы
-- [ ] Верификация формы → Supabase leads write (end-to-end)
+- [x] Верификация формы → Supabase leads write (end-to-end, 2026-04-19)
+- [~] Переключение вкладок на live (2/9: leads ✅, contacts ✅ — остались tasks, structure, history, training, templates, settings, dashboard)
 - [ ] AI Agent + n8n workflows
 - [ ] Contact import (CSV/VCF/Google)
 
