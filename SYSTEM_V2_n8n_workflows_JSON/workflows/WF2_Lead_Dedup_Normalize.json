@@ -1,0 +1,238 @@
+{
+  "name": "WF2 — Lead Dedup & Normalize",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "bdf4f081-ec94-4a62-bade-adfd31d72339",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/leads?select=id,partner_id,email,phone,created_at&order=created_at.desc&limit=50'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      },
+      "id": "fa67ecde-cd3e-4aa7-9089-378b870438b4",
+      "name": "Fetch Recent Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -620,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = Array.isArray($json.body) ? $json.body : [];\nconst seen = new Map();\nconst out = [];\nfor (const row of rows) {\n  const email = (row.email || '').toLowerCase();\n  const phone = (row.phone || '').replace(/[^\\d+]/g, '');\n  const key = `${row.partner_id}|${email}|${phone}`;\n  if (seen.has(key)) {\n    out.push({ lead_id: row.id, duplicate_of: seen.get(key), reason: 'email_or_phone_match' });\n  } else {\n    seen.set(key, row.id);\n  }\n}\nreturn out;"
+      },
+      "id": "00371408-c0d5-464c-8edb-4d2c24655996",
+      "name": "Build Dedup Decisions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$items().length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "94c35c9b-2af8-4e76-afe5-b3a3170ca6ca",
+      "name": "Any Duplicates?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/lead_events'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {lead_id:$json.lead_id, partner_id:null, event_type:'duplicate_flagged', payload:{duplicate_of:$json.duplicate_of, reason:$json.reason}} }}"
+      },
+      "id": "b7fd1f68-b74a-4336-a0b1-32caf89b04b5",
+      "name": "Flag Lead Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/events_log'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {entity_type:'lead', entity_id:$json.lead_id, event_type:'wf2_duplicate_flagged', payload:{duplicate_of:$json.duplicate_of}} }}"
+      },
+      "id": "2e47137c-31e7-439a-b151-5a53f08295bb",
+      "name": "Log Dedup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Leads": {
+      "main": [
+        [
+          {
+            "node": "Build Dedup Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Dedup Decisions": {
+      "main": [
+        [
+          {
+            "node": "Any Duplicates?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Duplicates?": {
+      "main": [
+        [
+          {
+            "node": "Flag Lead Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Flag Lead Event": {
+      "main": [
+        [
+          {
+            "node": "Log Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "meta": {
+    "template": "SYSTEM_V2_v1"
+  },
+  "versionId": "3d199d66-6bf3-4298-9250-2de1ff425862"
+}

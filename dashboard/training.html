@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Обучение — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    /* Module grid */
+    .mod-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));
+      gap:14px;
+    }
+    .mod {
+      background:var(--panel);
+      border:1px solid var(--brd);
+      border-radius:14px;
+      padding:18px;
+      cursor:pointer;
+      transition:all .2s;
+      position:relative;
+      overflow:hidden;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .mod:hover { border-color:var(--brd-a); transform:translateY(-2px); background:var(--card); }
+    .mod::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      border-radius:14px 14px 0 0;
+      background:var(--azure);
+    }
+    .mod.done::before { background:var(--green); }
+    .mod.progress::before { background:var(--sun); }
+    .mod.locked { opacity:.55; }
+    .mod.locked::before { background:var(--td); }
+
+    .mod-h {
+      display:flex; align-items:flex-start; gap:12px;
+    }
+    .mod-icon {
+      width:44px; height:44px; border-radius:12px;
+      background:rgba(0,180,216,.10);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; flex-shrink:0;
+    }
+    .mod.done .mod-icon { background:var(--grn-s); }
+    .mod.progress .mod-icon { background:rgba(255,183,3,.12); }
+
+    .mod-h-r { flex:1; min-width:0; }
+    .mod-t {
+      font-size:14px; font-weight:700; color:var(--tb);
+      line-height:1.3;
+    }
+    .mod-cat {
+      font-size:10px; color:var(--td); margin-top:3px;
+      font-weight:600; letter-spacing:.4px; text-transform:uppercase;
+    }
+    .mod-d {
+      font-size:12px; color:var(--td); line-height:1.45;
+    }
+
+    .mod-bar {
+      height:6px; border-radius:3px;
+      background:rgba(255,255,255,.05);
+      overflow:hidden;
+    }
+    .mod-bar-f {
+      height:100%; border-radius:3px;
+      background:linear-gradient(90deg, var(--ocean), var(--azure));
+      transition:width .3s;
+    }
+    .mod.done .mod-bar-f { background:linear-gradient(90deg, var(--green), var(--sky)); }
+
+    .mod-foot {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px;
+    }
+    .mod-stat {
+      font-size:11px; color:var(--td); display:flex; align-items:center; gap:8px;
+    }
+    .mod-stat b { color:var(--tb); font-family:'JetBrains Mono',monospace; font-weight:700; }
+    .mod-pct {
+      font-family:'JetBrains Mono',monospace;
+      font-size:13px; font-weight:700; color:var(--azure);
+    }
+    .mod.done .mod-pct { color:var(--green); }
+
+    .mod-badges { display:flex; gap:4px; flex-wrap:wrap; }
+    .mb-tag {
+      font-size:9px; font-weight:700; padding:2px 6px; border-radius:5px;
+      letter-spacing:.4px;
+    }
+    .mb-tag.lvl-1 { color:var(--green); background:var(--grn-s); border:1px solid rgba(6,214,160,.2); }
+    .mb-tag.lvl-2 { color:var(--sun);   background:rgba(255,183,3,.10); border:1px solid rgba(255,183,3,.22); }
+    .mb-tag.lvl-3 { color:var(--coral); background:rgba(255,107,107,.10); border:1px solid rgba(255,107,107,.22); }
+    .mb-tag.req   { color:var(--coral); background:rgba(255,107,107,.10); border:1px solid rgba(255,107,107,.22); }
+    .mb-tag.cert  { color:var(--sun);   background:rgba(255,183,3,.12); border:1px solid rgba(255,183,3,.28); }
+
+    /* Lessons in modal */
+    .lesson {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; background:var(--gl);
+      border:1px solid var(--brd); border-radius:9px;
+      transition:all .15s; cursor:pointer;
+    }
+    .lesson:hover { border-color:var(--brd-a); }
+    .lesson.done { opacity:.7; }
+    .lesson.done .ls-t { text-decoration:line-through; color:var(--td); }
+    .lesson + .lesson { margin-top:6px; }
+    .ls-check {
+      width:22px; height:22px; border-radius:50%;
+      border:2px solid var(--brd-a);
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700;
+      flex-shrink:0; color:transparent;
+    }
+    .lesson.done .ls-check {
+      background:var(--green); border-color:var(--green); color:#0A1929;
+    }
+    .ls-icon { font-size:14px; }
+    .ls-b { flex:1; min-width:0; }
+    .ls-t { font-size:13px; font-weight:600; color:var(--tb); line-height:1.3; }
+    .ls-m { font-size:11px; color:var(--td); margin-top:2px; }
+
+    /* Overall progress block */
+    .overall {
+      background:linear-gradient(135deg,var(--card),var(--panel));
+      border:1px solid var(--brd); border-radius:16px;
+      padding:20px 22px; margin-bottom:20px;
+      position:relative; overflow:hidden;
+    }
+    .overall::after {
+      content:''; position:absolute; top:0; right:0; width:200px; height:100%;
+      background:linear-gradient(135deg,transparent,rgba(255,183,3,.05));
+    }
+    .ov-h { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .ov-ttl { font-family:'Playfair Display',serif; font-size:18px; color:var(--tb); font-weight:600; }
+    .ov-sub { font-size:12px; color:var(--td); margin-top:2px; }
+    .ov-pct { font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:700; color:var(--sun); line-height:1; }
+    .ov-bar { height:10px; border-radius:5px; background:rgba(255,255,255,.05); overflow:hidden; }
+    .ov-bar-f {
+      height:100%; border-radius:5px;
+      background:linear-gradient(90deg, var(--sunw), var(--sun));
+      box-shadow:0 0 12px rgba(255,183,3,.4);
+    }
+
+    @media (max-width: 480px) {
+      .mod-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>Обучение</h2>
+      <p>Модули обучения для партнёра: продажи, продукт, compliance, работа с системой и AI. <b>Обязательные модули</b> отмечены красным — без них AI-агент не активируется.</p>
+    </div>
+    <div class="welcome-r"><div class="wdate">Модулей: <b id="t-mod-cnt">0</b></div></div>
+  </div>
+
+  <!-- Общий прогресс -->
+  <div class="overall">
+    <div class="ov-h">
+      <div>
+        <div class="ov-ttl">🎓 Общий прогресс обучения</div>
+        <div class="ov-sub" id="ov-sub">—</div>
+      </div>
+      <div class="ov-pct" id="ov-pct">0%</div>
+    </div>
+    <div class="ov-bar"><div class="ov-bar-f" id="ov-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">📚</div><div class="sc-trend tu" id="st-tr-trend">+0</div></div><div class="sc-val" id="st-tr-mods">0</div><div class="sc-lbl">Модулей всего</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">✅</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-tr-done">0</div><div class="sc-lbl">Завершено</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">🟡</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-tr-prog">0</div><div class="sc-lbl">В процессе</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">🏆</div><div class="sc-trend tu" id="st-tr-cert-trend">+0</div></div><div class="sc-val" id="st-tr-cert">0</div><div class="sc-lbl">Сертификатов</div></div>
+  </div>
+
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-t">📚 Модули обучения</div>
+      <div class="pnl-tabs" id="tr-status">
+        <button class="pt active" data-s="all">Все</button>
+        <button class="pt" data-s="progress">🟡 В процессе</button>
+        <button class="pt" data-s="not_started">⬜ Не начат</button>
+        <button class="pt" data-s="done">✅ Завершено</button>
+      </div>
+    </div>
+    <div class="pnl-tabs" id="tr-cat" style="padding:0 2px 6px">
+      <button class="pt active" data-c="all">Все категории</button>
+      <button class="pt" data-c="start">🚀 Старт</button>
+      <button class="pt" data-c="sales">💼 Продажи</button>
+      <button class="pt" data-c="product">🚢 Продукт</button>
+      <button class="pt" data-c="compliance">⚖️ Compliance</button>
+      <button class="pt" data-c="ai">🤖 AI</button>
+      <button class="pt" data-c="tech">⚙️ Система</button>
+    </div>
+    <div class="sch">
+      <input type="text" id="tr-search" class="sch-i" placeholder="🔍 Поиск по названию модуля или описанию…">
+    </div>
+    <div class="mod-grid" id="tr-list"></div>
+    <div class="leads-empty" id="tr-empty" style="display:none">
+      <div class="stub-icon">📭</div>
+      <p>По выбранным фильтрам модулей нет.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Module Detail Modal -->
+<div class="modal" id="tr-modal">
+  <div class="modal-backdrop" onclick="closeTrModal()"></div>
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeTrModal()">✕</button>
+    <div id="tr-modal-body"></div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('training');
+
+const CAT_MAP = {
+  start:      { label:'Старт',      icon:'🚀' },
+  sales:      { label:'Продажи',    icon:'💼' },
+  product:    { label:'Продукт',    icon:'🚢' },
+  compliance: { label:'Compliance', icon:'⚖️' },
+  ai:         { label:'AI',         icon:'🤖' },
+  tech:       { label:'Система',    icon:'⚙️' },
+};
+const LVL_MAP = {
+  1: { label:'Базовый',   cls:'lvl-1' },
+  2: { label:'Средний',   cls:'lvl-2' },
+  3: { label:'Продвинут', cls:'lvl-3' },
+};
+const LSN_TYPE = {
+  video:     { icon:'▶️', label:'Видео' },
+  article:   { icon:'📖', label:'Статья' },
+  checklist: { icon:'☑️', label:'Чек-лист' },
+  quiz:      { icon:'❓', label:'Тест' },
+  practice:  { icon:'🛠', label:'Практика' },
+};
+
+// ===== MOCK MODULES =====
+const MODULES = [
+  {
+    id:1, cat:'start', icon:'🚀', level:1, required:true, cert:true,
+    title:'Старт партнёра — первые 7 дней',
+    desc:'Что делать сразу после регистрации: настроить профиль, добавить первые 20 контактов, отправить тестовую заявку.',
+    lessons:[
+      { title:'Знакомство с системой',         type:'video',     min:8,  done:true },
+      { title:'Настройка профиля и реф-кода',  type:'practice',  min:10, done:true },
+      { title:'Первые 20 контактов: упражнение',type:'checklist',min:20, done:true },
+      { title:'Тестовая заявка через лендинг', type:'practice',  min:10, done:true },
+      { title:'Чек-лист готовности к работе',  type:'quiz',      min:5,  done:true },
+    ]
+  },
+  {
+    id:2, cat:'compliance', icon:'⚖️', level:1, required:true, cert:true,
+    title:'Compliance: что нельзя обещать',
+    desc:'Политика InCruises и Meta/WABA: запрещённые формулировки, гарантии дохода, медицинские обещания. Обязательно перед AI.',
+    lessons:[
+      { title:'Запрет гарантий дохода',          type:'article', min:8,  done:true },
+      { title:'Meta/WABA: что банит мессенджер', type:'article', min:6,  done:true },
+      { title:'Примеры опасных формулировок',    type:'video',   min:12, done:true },
+      { title:'Финальный тест на знание правил', type:'quiz',    min:10, done:true },
+    ]
+  },
+  {
+    id:3, cat:'sales', icon:'💼', level:2, required:true, cert:false,
+    title:'Скрипты продаж: тёплый и холодный контакт',
+    desc:'Как начать диалог в WhatsApp/Telegram. Восемь готовых скриптов, шаблоны для разных ситуаций.',
+    lessons:[
+      { title:'Психология первого сообщения',  type:'video',     min:14, done:true },
+      { title:'Тёплый контакт: 4 скрипта',     type:'article',   min:12, done:true },
+      { title:'Холодный контакт: 4 скрипта',   type:'article',   min:12, done:true },
+      { title:'Адаптация под мессенджер',      type:'video',     min:10, done:true },
+      { title:'Практика: напиши 3 диалога',    type:'practice',  min:25, done:false },
+      { title:'Разбор ошибок',                 type:'video',     min:15, done:false },
+      { title:'Тон голоса и эмодзи',           type:'article',   min:8,  done:false },
+      { title:'Тест по скриптам',              type:'quiz',      min:10, done:false },
+    ]
+  },
+  {
+    id:4, cat:'sales', icon:'🛡', level:2, required:false, cert:true,
+    title:'Работа с возражениями',
+    desc:'«Это пирамида?», «Дорого», «Подумаю», «У меня нет времени». Как отвечать без давления.',
+    lessons:[
+      { title:'6 топ-возражений в InCruises',     type:'video',  min:18, done:true },
+      { title:'Скрипт «Это пирамида?»',           type:'article',min:8,  done:true },
+      { title:'Скрипт «Дорого / нет денег»',      type:'article',min:8,  done:false },
+      { title:'Скрипт «Подумаю / посоветуюсь»',   type:'article',min:8,  done:false },
+      { title:'Когда отпустить лида (не давить)', type:'video',  min:10, done:false },
+      { title:'Финальный тест',                   type:'quiz',   min:10, done:false },
+    ]
+  },
+  {
+    id:5, cat:'product', icon:'🚢', level:1, required:true, cert:true,
+    title:'Продукт InCruises: круизы, планы, баллы',
+    desc:'Membership Plans (Standard/Elite/Black), reward credits, какие линии включены, как считаются баллы.',
+    lessons:[
+      { title:'Как устроен InCruises',         type:'video',    min:12, done:false },
+      { title:'Membership Plans: 3 уровня',    type:'article',  min:10, done:false },
+      { title:'Reward Credits: математика',    type:'article',  min:8,  done:false },
+      { title:'Круизные линии в каталоге',     type:'article',  min:6,  done:false },
+      { title:'Как забронировать круиз',       type:'video',    min:10, done:false },
+      { title:'FAQ: топ-15 вопросов клиентов', type:'article',  min:14, done:false },
+      { title:'Тест по продукту',              type:'quiz',     min:12, done:false },
+    ]
+  },
+  {
+    id:6, cat:'product', icon:'💰', level:2, required:false, cert:true,
+    title:'Compensation Plan: 6 источников дохода',
+    desc:'DAB, MAB, Matching, TLB, Recurring, Foundation Bonus. Как растёт ранг и что нужно для перехода.',
+    lessons:[
+      { title:'Daily Activation Bonus (DAB)',    type:'article', min:8,  done:false },
+      { title:'Monthly Activation Bonus (MAB)',  type:'article', min:6,  done:false },
+      { title:'Matching Bonus',                  type:'video',   min:12, done:false },
+      { title:'TLB и рекуррентный доход',        type:'article', min:10, done:false },
+      { title:'Калькулятор 3×3×3',               type:'practice',min:15, done:false },
+      { title:'Тест по плану вознаграждений',    type:'quiz',    min:10, done:false },
+    ]
+  },
+  {
+    id:7, cat:'tech', icon:'⚙️', level:1, required:true, cert:false,
+    title:'Дашборд SYSTEM V2: полный тур',
+    desc:'9 вкладок, фильтры, поиск, как читать статусы лидов и контактов, как пользоваться задачами.',
+    lessons:[
+      { title:'Обзор 9 вкладок',                 type:'video',     min:10, done:true },
+      { title:'Заявки: статусы и квалификация',  type:'article',   min:8,  done:true },
+      { title:'Контакты vs Лиды: разница',       type:'article',   min:5,  done:true },
+      { title:'Задачи: приоритеты и сроки',      type:'video',     min:8,  done:false },
+      { title:'Чек-лист уверенного юзера',       type:'checklist', min:10, done:false },
+    ]
+  },
+  {
+    id:8, cat:'ai', icon:'🤖', level:2, required:true, cert:true,
+    title:'AI-агент: работа с черновиками',
+    desc:'Полуавтомат: AI делает черновик, вы редактируете и одобряете. Как НЕ потерять контроль и не нарушить compliance.',
+    lessons:[
+      { title:'Как AI создаёт черновики',         type:'video',    min:10, done:false },
+      { title:'Принцип «человек одобряет всё»',   type:'article',  min:6,  done:false },
+      { title:'Когда нужно править AI вручную',   type:'article',  min:8,  done:false },
+      { title:'Финальный тест: 5 кейсов',         type:'quiz',     min:12, done:false },
+    ]
+  },
+  {
+    id:9, cat:'sales', icon:'📨', level:1, required:false, cert:false,
+    title:'Рекрутинг: первый шаг к партнёрству',
+    desc:'Как пригласить контакт стать партнёром. Реф-ссылка, презентация плана, follow-up.',
+    lessons:[
+      { title:'Когда контакт готов к рекрутингу', type:'article',  min:8,  done:false },
+      { title:'Презентация плана: 7 минут',       type:'video',    min:14, done:false },
+      { title:'Использование реф-ссылки',         type:'practice', min:10, done:false },
+      { title:'Follow-up: что и когда писать',    type:'article',  min:8,  done:false },
+      { title:'Холодный круг: первые 50',         type:'checklist',min:15, done:false },
+      { title:'Тест по рекрутингу',               type:'quiz',     min:10, done:false },
+    ]
+  },
+  {
+    id:10, cat:'tech', icon:'📞', level:3, required:false, cert:true,
+    title:'Продвинутый: интеграция WhatsApp Business API',
+    desc:'Как подключить WABA, лимиты, шаблоны, что грозит за нарушение Meta policy. Только для опытных.',
+    lessons:[
+      { title:'WABA: что это и зачем',          type:'article', min:10, done:false },
+      { title:'Подключение через провайдера',   type:'video',   min:18, done:false },
+      { title:'Шаблоны и approval Meta',        type:'article', min:12, done:false },
+      { title:'Quality rating и риски бана',    type:'video',   min:10, done:false },
+    ]
+  },
+];
+
+// Заполняем completed_lessons
+MODULES.forEach(m => {
+  m.completed = m.lessons.filter(l => l.done).length;
+  m.total = m.lessons.length;
+  m.duration = m.lessons.reduce((s,l) => s + l.min, 0);
+  m.pct = m.total ? Math.round(m.completed / m.total * 100) : 0;
+  m.status = m.pct === 100 ? 'done' : m.pct === 0 ? 'not_started' : 'progress';
+});
+
+let statusFilter = 'all';
+let catFilter = 'all';
+let trSearch = '';
+
+// ===== stats =====
+function updateStats() {
+  const total = MODULES.length;
+  const done = MODULES.filter(m => m.status === 'done').length;
+  const prog = MODULES.filter(m => m.status === 'progress').length;
+  const cert = MODULES.filter(m => m.status === 'done' && m.cert).length;
+  const allLessons = MODULES.reduce((s,m) => s + m.total, 0);
+  const allDone    = MODULES.reduce((s,m) => s + m.completed, 0);
+  const overall    = allLessons ? Math.round(allDone / allLessons * 100) : 0;
+
+  document.getElementById('t-mod-cnt').textContent = total;
+  document.getElementById('st-tr-mods').textContent = total;
+  document.getElementById('st-tr-done').textContent = done;
+  document.getElementById('st-tr-prog').textContent = prog;
+  document.getElementById('st-tr-cert').textContent = cert;
+  document.getElementById('st-tr-trend').textContent = `+${total}`;
+  document.getElementById('st-tr-cert-trend').textContent = cert ? `+${cert}` : '0';
+
+  document.getElementById('ov-pct').textContent = overall + '%';
+  document.getElementById('ov-bar').style.width = overall + '%';
+  document.getElementById('ov-sub').innerHTML =
+    `Уроков пройдено: <b style="color:var(--tb)">${allDone}</b> из <b style="color:var(--tb)">${allLessons}</b> · модулей завершено: <b style="color:var(--tb)">${done}</b> из <b style="color:var(--tb)">${total}</b>`;
+}
+
+// ===== render =====
+function renderModules() {
+  const list = document.getElementById('tr-list');
+  const empty = document.getElementById('tr-empty');
+  const q = trSearch.toLowerCase().trim();
+
+  let filtered = MODULES.filter(m => {
+    if (statusFilter !== 'all' && m.status !== statusFilter) return false;
+    if (catFilter !== 'all' && m.cat !== catFilter) return false;
+    if (!q) return true;
+    const hay = `${m.title} ${m.desc} ${CAT_MAP[m.cat]?.label || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  // Сортировка: required первыми, потом in_progress, потом not_started, потом done
+  const order = { progress:0, not_started:1, done:2 };
+  filtered.sort((a,b) => (b.required - a.required) || (order[a.status] - order[b.status]) || (b.pct - a.pct));
+
+  if (filtered.length === 0) {
+    list.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  list.style.display = 'grid';
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(m => {
+    const cat = CAT_MAP[m.cat];
+    const lvl = LVL_MAP[m.level];
+    const reqBadge  = m.required ? '<span class="mb-tag req">⚠ Обязательно</span>' : '';
+    const certBadge = m.cert     ? '<span class="mb-tag cert">🏆 Сертификат</span>' : '';
+    return `
+      <div class="mod ${m.status}" onclick="openTrModal(${m.id})">
+        <div class="mod-h">
+          <div class="mod-icon">${m.icon}</div>
+          <div class="mod-h-r">
+            <div class="mod-t">${m.title}</div>
+            <div class="mod-cat">${cat.icon} ${cat.label} · ${m.duration} мин</div>
+          </div>
+        </div>
+        <div class="mod-d">${m.desc}</div>
+        <div class="mod-badges">
+          <span class="mb-tag ${lvl.cls}">${lvl.label}</span>
+          ${reqBadge}
+          ${certBadge}
+        </div>
+        <div class="mod-bar"><div class="mod-bar-f" style="width:${m.pct}%"></div></div>
+        <div class="mod-foot">
+          <div class="mod-stat">📚 <b>${m.completed}</b> / ${m.total} уроков</div>
+          <div class="mod-pct">${m.pct}%</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ===== filters =====
+document.getElementById('tr-status').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#tr-status .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); statusFilter = btn.dataset.s; renderModules();
+});
+document.getElementById('tr-cat').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#tr-cat .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); catFilter = btn.dataset.c; renderModules();
+});
+document.getElementById('tr-search').addEventListener('input', e => { trSearch = e.target.value; renderModules(); });
+
+// ===== modal =====
+function openTrModal(id) {
+  const m = MODULES.find(x => x.id === id);
+  if (!m) return;
+  const cat = CAT_MAP[m.cat];
+  const lvl = LVL_MAP[m.level];
+  const body = document.getElementById('tr-modal-body');
+  const lessonsHtml = m.lessons.map((l, i) => {
+    const lt = LSN_TYPE[l.type] || { icon:'📄', label:l.type };
+    return `
+      <div class="lesson ${l.done?'done':''}" onclick="toggleLesson(${m.id},${i})">
+        <div class="ls-check">${l.done?'✓':''}</div>
+        <div class="ls-icon">${lt.icon}</div>
+        <div class="ls-b">
+          <div class="ls-t">${l.title}</div>
+          <div class="ls-m">${lt.label} · ${l.min} мин</div>
+        </div>
+      </div>`;
+  }).join('');
+  const ctaLabel = m.status === 'done' ? '↻ Повторить модуль' : (m.status === 'progress' ? '▶️ Продолжить' : '▶️ Начать модуль');
+  body.innerHTML = `
+    <div class="modal-head">
+      <div class="mod-icon" style="width:50px;height:50px;border-radius:14px;font-size:24px">${m.icon}</div>
+      <div>
+        <div class="modal-ttl">${m.title}</div>
+        <div class="modal-sub">${cat.icon} ${cat.label} · ${m.duration} мин · ${lvl.label}</div>
+      </div>
+      <div class="mod-pct" style="margin-left:auto;font-size:24px">${m.pct}%</div>
+    </div>
+    <div style="font-size:13px;color:var(--tm);line-height:1.5;margin-bottom:14px">${m.desc}</div>
+    <div class="mod-bar" style="margin-bottom:6px"><div class="mod-bar-f" style="width:${m.pct}%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--td);margin-bottom:18px">
+      <span>📚 <b style="color:var(--tb)">${m.completed}</b> / ${m.total} уроков</span>
+      <span>${m.required ? '⚠ Обязательно' : 'По желанию'} · ${m.cert ? '🏆 Сертификат' : 'без сертификата'}</span>
+    </div>
+    <div style="font-size:12px;color:var(--td);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📖 Уроки модуля</div>
+    <div>${lessonsHtml}</div>
+    <div class="modal-actions" style="margin-top:18px">
+      <button class="mbtn mbtn-p" onclick="startModule(${m.id})">${ctaLabel}</button>
+      ${m.status === 'done' && m.cert ? `<button class="mbtn mbtn-gold" onclick="downloadCert(${m.id})">🏆 Сертификат PDF</button>` : ''}
+    </div>
+  `;
+  document.getElementById('tr-modal').classList.add('active');
+}
+function closeTrModal() { document.getElementById('tr-modal').classList.remove('active'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTrModal(); });
+
+// ===== actions =====
+function showToast(msg) {
+  let el = document.getElementById('app-toast');
+  if (!el) { el = document.createElement('div'); el.id='app-toast'; el.className='toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => el.classList.remove('show'), 2800);
+}
+function toggleLesson(modId, idx) {
+  const m = MODULES.find(x => x.id === modId);
+  if (!m) return;
+  m.lessons[idx].done = !m.lessons[idx].done;
+  m.completed = m.lessons.filter(l => l.done).length;
+  m.pct = m.total ? Math.round(m.completed / m.total * 100) : 0;
+  m.status = m.pct === 100 ? 'done' : m.pct === 0 ? 'not_started' : 'progress';
+  renderModules(); updateStats();
+  openTrModal(modId);
+  if (m.status === 'done') showToast(`🏆 Модуль "${m.title}" завершён!`);
+}
+function startModule(id) {
+  const m = MODULES.find(x => x.id === id);
+  showToast(`▶️ Запуск модуля "${m.title}". Плеер уроков появится в следующей итерации.`);
+}
+function downloadCert(id) {
+  showToast(`🏆 Генерация сертификата PDF — появится после интеграции рендера.`);
+}
+
+updateStats();
+renderModules();
+</script>
+</body>
+</html>

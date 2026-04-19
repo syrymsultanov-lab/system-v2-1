@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="system v2 — AI-платформа для MLM команд. Автоматизация работы с заявками, контактами и командой.">
+  <title>system v2 — AI-платформа для MLM команд</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">system <b>v2</b></a>
+    <nav class="nav">
+      <a href="#about" class="nav-link">
+        <span data-lang="ru">О системе</span>
+        <span data-lang="en">About</span>
+        <span data-lang="kz">Жүйе туралы</span>
+      </a>
+      <a href="#features" class="nav-link">
+        <span data-lang="ru">Возможности</span>
+        <span data-lang="en">Features</span>
+        <span data-lang="kz">Мүмкіндіктер</span>
+      </a>
+      <a href="reviews.html" class="nav-link">
+        <span data-lang="ru">Отзывы</span>
+        <span data-lang="en">Reviews</span>
+        <span data-lang="kz">Пікірлер</span>
+      </a>
+      <a href="login.html" class="nav-link nav-cabinet">
+        <span data-lang="ru">Кабинет</span>
+        <span data-lang="en">Dashboard</span>
+        <span data-lang="kz">Кабинет</span>
+      </a>
+      <a href="#join" class="nav-cta">
+        <span data-lang="ru">Оставить заявку</span>
+        <span data-lang="en">Request access</span>
+        <span data-lang="kz">Өтінім қалдыру</span>
+      </a>
+      <div class="lang-switch">
+        <button class="lang-btn active" data-set-lang="ru">RU</button>
+        <button class="lang-btn" data-set-lang="en">EN</button>
+        <button class="lang-btn" data-set-lang="kz">KZ</button>
+      </div>
+    </nav>
+    <button class="mobile-menu-btn" onclick="document.querySelector('.nav').classList.toggle('mobile-open')">☰</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <video class="hero-video" autoplay muted loop playsinline>
+    <source src="assets/video/hero-bg.mp4" type="video/mp4">
+  </video>
+  <div class="hero-overlay"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span data-lang="ru">AI-платформа для MLM команд</span>
+        <span data-lang="en">AI platform for MLM teams</span>
+        <span data-lang="kz">MLM командаларына арналған AI-платформа</span>
+      </div>
+      <h1>
+        <span data-lang="ru">Система, которая работает <em>пока ты отдыхаешь</em></span>
+        <span data-lang="en">The system that works <em>while you rest</em></span>
+        <span data-lang="kz">Сен демалып жатқанда <em>жұмыс істейтін</em> жүйе</span>
+      </h1>
+      <p class="hero-sub">
+        <span data-lang="ru">Впервые в мире MLM — полная AI-автоматизация работы с заявками, контактами и командой.</span>
+        <span data-lang="en">For the first time in MLM — full AI automation of requests, contacts and team management.</span>
+        <span data-lang="kz">MLM әлемінде алғаш рет — өтінімдермен, контактілермен және командамен жұмысты толық AI-автоматтандыру.</span>
+      </p>
+      <div class="hero-actions">
+        <a href="#join" class="btn-primary">
+          <span data-lang="ru">Оставить заявку →</span>
+          <span data-lang="en">Request access →</span>
+          <span data-lang="kz">Өтінім қалдыру →</span>
+        </a>
+        <a href="#about" class="btn-secondary">
+          <span data-lang="ru">Узнать больше</span>
+          <span data-lang="en">Learn more</span>
+          <span data-lang="kz">Көбірек білу</span>
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num">250+</div>
+          <div class="hero-stat-label">
+            <span data-lang="ru">партнёров</span>
+            <span data-lang="en">partners</span>
+            <span data-lang="kz">серіктестер</span>
+          </div>
+        </div>
+        <div>
+          <div class="hero-stat-num">24/7</div>
+          <div class="hero-stat-label">
+            <span data-lang="ru">AI-агент</span>
+            <span data-lang="en">AI agent</span>
+            <span data-lang="kz">AI-агент</span>
+          </div>
+        </div>
+        <div>
+          <div class="hero-stat-num">8</div>
+          <div class="hero-stat-label">
+            <span data-lang="ru">AI workflow</span>
+            <span data-lang="en">AI workflows</span>
+            <span data-lang="kz">AI workflow</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEMS -->
+<section class="section" id="about">
+  <div class="container">
+    <div class="section-label">
+      <span data-lang="ru">ПРОБЛЕМА</span>
+      <span data-lang="en">THE PROBLEM</span>
+      <span data-lang="kz">МӘСЕЛЕ</span>
+    </div>
+    <div class="section-title">
+      <span data-lang="ru">Почему 80% партнёров теряют заявки?</span>
+      <span data-lang="en">Why do 80% of partners lose requests?</span>
+      <span data-lang="kz">Неге серіктестердің 80% өтінімдерді жоғалтады?</span>
+    </div>
+    <div class="section-desc">
+      <span data-lang="ru">Три главных барьера, которые мешают росту команды.</span>
+      <span data-lang="en">Three main barriers preventing team growth.</span>
+      <span data-lang="kz">Команданың өсуіне кедергі болатын үш негізгі тосқауыл.</span>
+    </div>
+    <div class="problems-grid">
+      <div class="problem-card">
+        <div class="problem-icon">⏰</div>
+        <h3>
+          <span data-lang="ru">Рутина съедает время</span>
+          <span data-lang="en">Routine eats time</span>
+          <span data-lang="kz">Күнделікті жұмыс уақытты жейді</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Переписки вручную — часы, которые должен экономить AI.</span>
+          <span data-lang="en">Manual messaging — hours that AI should save.</span>
+          <span data-lang="kz">Қолмен хат жазу — AI үнемдеуі тиіс сағаттар.</span>
+        </p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📉</div>
+        <h3>
+          <span data-lang="ru">Заявки уходят в никуда</span>
+          <span data-lang="en">Requests go nowhere</span>
+          <span data-lang="kz">Өтінімдер жоғалады</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Без касаний горячая заявка остывает за 24 часа.</span>
+          <span data-lang="en">Without follow-ups, a hot request cools in 24 hours.</span>
+          <span data-lang="kz">Байланыссыз ыстық өтінім 24 сағатта суынады.</span>
+        </p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🔁</div>
+        <h3>
+          <span data-lang="ru">Дупликация не работает</span>
+          <span data-lang="en">Duplication fails</span>
+          <span data-lang="kz">Дупликация жұмыс істемейді</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Новичок не знает что делать. Команда не растёт.</span>
+          <span data-lang="en">Newcomers don't know what to do. Team doesn't grow.</span>
+          <span data-lang="kz">Жаңадан келген не істерін білмейді. Команда өспейді.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section section-alt" id="features">
+  <div class="container">
+    <div class="section-label">
+      <span data-lang="ru">РЕШЕНИЕ</span>
+      <span data-lang="en">SOLUTION</span>
+      <span data-lang="kz">ШЕШІМ</span>
+    </div>
+    <div class="section-title">
+      <span data-lang="ru">AI-агент берёт рутину на себя</span>
+      <span data-lang="en">AI agent handles the routine</span>
+      <span data-lang="kz">AI-агент күнделікті жұмысты өзіне алады</span>
+    </div>
+    <div class="section-desc">
+      <span data-lang="ru">Полностью. Автоматически. 24/7.</span>
+      <span data-lang="en">Completely. Automatically. 24/7.</span>
+      <span data-lang="kz">Толығымен. Автоматты түрде. 24/7.</span>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon fi-blue">🤖</div>
+        <h3>
+          <span data-lang="ru">AI-квалификация заявок</span>
+          <span data-lang="en">AI request qualification</span>
+          <span data-lang="kz">AI өтінімдерді саралау</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Система анализирует каждого кандидата автоматически. Горячие — в приоритете.</span>
+          <span data-lang="en">The system analyzes every candidate automatically. Hot ones — priority.</span>
+          <span data-lang="kz">Жүйе әр үміткерді автоматты түрде талдайды. Ыстықтар — басымдықта.</span>
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-sun">📱</div>
+        <h3>
+          <span data-lang="ru">Многоканальные касания</span>
+          <span data-lang="en">Multi-channel follow-ups</span>
+          <span data-lang="kz">Көп арналы байланыс</span>
+        </h3>
+        <p>
+          <span data-lang="ru">WhatsApp, Telegram, Email — правильное сообщение в нужный момент.</span>
+          <span data-lang="en">WhatsApp, Telegram, Email — right message at the right time.</span>
+          <span data-lang="kz">WhatsApp, Telegram, Email — дұрыс уақытта дұрыс хабарлама.</span>
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-green">👥</div>
+        <h3>
+          <span data-lang="ru">Дупликация команды</span>
+          <span data-lang="en">Team duplication</span>
+          <span data-lang="kz">Команданы дупликациялау</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Каждый новый партнёр получает ту же систему. Масштабирование без хаоса.</span>
+          <span data-lang="en">Every new partner gets the same system. Scaling without chaos.</span>
+          <span data-lang="kz">Әр жаңа серіктес сол жүйені алады. Хаоссыз масштабтау.</span>
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-azure">📊</div>
+        <h3>
+          <span data-lang="ru">Аналитика реального времени</span>
+          <span data-lang="en">Real-time analytics</span>
+          <span data-lang="kz">Нақты уақыттағы аналитика</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Заявки, активность команды, эффективность — всё в одном месте.</span>
+          <span data-lang="en">Requests, team activity, performance — all in one place.</span>
+          <span data-lang="kz">Өтінімдер, команда белсенділігі, тиімділік — бір жерде.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 STEPS -->
+<section class="section">
+  <div class="container">
+    <div class="section-label">
+      <span data-lang="ru">КАК ЭТО РАБОТАЕТ</span>
+      <span data-lang="en">HOW IT WORKS</span>
+      <span data-lang="kz">ҚАЛАЙ ЖҰМЫС ІСТЕЙДІ</span>
+    </div>
+    <div class="section-title">
+      <span data-lang="ru">Три шага к автоматизации</span>
+      <span data-lang="en">Three steps to automation</span>
+      <span data-lang="kz">Автоматтандыруға үш қадам</span>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h3>
+          <span data-lang="ru">Кандидат заполняет форму</span>
+          <span data-lang="en">Candidate fills the form</span>
+          <span data-lang="kz">Үміткер форманы толтырады</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Заявка автоматически попадает в систему.</span>
+          <span data-lang="en">The request automatically enters the system.</span>
+          <span data-lang="kz">Өтінім автоматты түрде жүйеге түседі.</span>
+        </p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h3>
+          <span data-lang="ru">AI анализирует и действует</span>
+          <span data-lang="en">AI analyzes and acts</span>
+          <span data-lang="kz">AI талдайды және әрекет етеді</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Квалификация, касания, задачи — без вас.</span>
+          <span data-lang="en">Qualification, follow-ups, tasks — without you.</span>
+          <span data-lang="kz">Саралау, байланыс, тапсырмалар — сізсіз.</span>
+        </p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h3>
+          <span data-lang="ru">Вы занимаетесь людьми</span>
+          <span data-lang="en">You focus on people</span>
+          <span data-lang="kz">Сіз адамдармен айналысасыз</span>
+        </h3>
+        <p>
+          <span data-lang="ru">Система делает рутину. Вы строите команду.</span>
+          <span data-lang="en">System handles routine. You build the team.</span>
+          <span data-lang="kz">Жүйе күнделікті жұмысты жасайды. Сіз команда құрасыз.</span>
+        </p>
+      </div>
+</div>
+</section>
+
+<!-- IMAGE GALLERY -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-title">
+      <span data-lang="ru">Мечта ближе, чем кажется</span>
+      <span data-lang="en">The dream is closer than you think</span>
+      <span data-lang="kz">Арман сіз ойлағаннан жақын</span>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-card gallery-big">
+        <img src="assets/images/pool.png" alt="Pool on cruise ship" loading="lazy">
+        <div class="gallery-label">
+          <span data-lang="ru">Бассейн на палубе</span>
+          <span data-lang="en">Pool on deck</span>
+          <span data-lang="kz">Палубадағы бассейн</span>
+        </div>
+      </div>
+      <div class="gallery-card">
+        <img src="assets/images/suite.png" alt="Luxury suite" loading="lazy">
+        <div class="gallery-label">
+          <span data-lang="ru">Каюта люкс</span>
+          <span data-lang="en">Luxury suite</span>
+          <span data-lang="kz">Люкс каюта</span>
+        </div>
+      </div>
+      <div class="gallery-card">
+        <img src="assets/images/restaurant.png" alt="Restaurant" loading="lazy">
+        <div class="gallery-label">
+          <span data-lang="ru">Ресторан на борту</span>
+          <span data-lang="en">Onboard restaurant</span>
+          <span data-lang="kz">Борттағы мейрамхана</span>
+        </div>
+      </div>
+      <div class="gallery-card gallery-big">
+        <img src="assets/images/port.png" alt="Tropical port" loading="lazy">
+        <div class="gallery-label">
+          <span data-lang="ru">Тропический порт</span>
+          <span data-lang="en">Tropical port</span>
+          <span data-lang="kz">Тропикалық порт</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="section">
+  <div class="container">
+    <div class="section-title">
+      <span data-lang="ru">Аналогов не существует</span>
+      <span data-lang="en">No analogues exist</span>
+      <span data-lang="kz">Аналогтары жоқ</span>
+    </div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>
+            <span data-lang="ru">Возможность</span>
+            <span data-lang="en">Feature</span>
+            <span data-lang="kz">Мүмкіндік</span>
+          </th>
+          <th>
+            <span data-lang="ru">Обычный рекрутёр</span>
+            <span data-lang="en">Regular recruiter</span>
+            <span data-lang="kz">Кәдімгі рекрутер</span>
+          </th>
+          <th>SYSTEM V2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <span data-lang="ru">AI-обработка заявок</span>
+            <span data-lang="en">AI request processing</span>
+            <span data-lang="kz">AI өтінімдерді өңдеу</span>
+          </td>
+          <td><span class="compare-no">✕</span></td>
+          <td><span class="compare-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>
+            <span data-lang="ru">Автоматические касания</span>
+            <span data-lang="en">Automatic follow-ups</span>
+            <span data-lang="kz">Автоматты байланыс</span>
+          </td>
+          <td><span class="compare-no">✕</span></td>
+          <td><span class="compare-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>
+            <span data-lang="ru">Дупликация системы</span>
+            <span data-lang="en">System duplication</span>
+            <span data-lang="kz">Жүйені дупликациялау</span>
+          </td>
+          <td><span class="compare-no">✕</span></td>
+          <td><span class="compare-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>
+            <span data-lang="ru">Аналитика команды</span>
+            <span data-lang="en">Team analytics</span>
+            <span data-lang="kz">Команда аналитикасы</span>
+          </td>
+          <td><span class="compare-no">✕</span></td>
+          <td><span class="compare-yes">✓</span></td>
+        </tr>
+        <tr>
+          <td>
+            <span data-lang="ru">Работа 24/7</span>
+            <span data-lang="en">24/7 operation</span>
+            <span data-lang="kz">24/7 жұмыс</span>
+          </td>
+          <td><span class="compare-no">✕</span></td>
+          <td><span class="compare-yes">✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="text-align:center; font-size:12px; color:var(--text-light); margin-top:16px;">
+      <span data-lang="ru">* Результаты индивидуальны. Система не гарантирует доход.</span>
+      <span data-lang="en">* Results are individual. The system does not guarantee income.</span>
+      <span data-lang="kz">* Нәтижелер жеке. Жүйе табысқа кепілдік бермейді.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ACCESS GATE -->
+<section class="access-section" id="join">
+  <div class="container">
+    <div class="access-card" id="access-gate">
+      <div class="lock-icon">🔒</div>
+      <h2>
+        <span data-lang="ru">Доступ только по приглашению</span>
+        <span data-lang="en">Access by invitation only</span>
+        <span data-lang="kz">Тек шақыру арқылы қол жеткізу</span>
+      </h2>
+      <p>
+        <span data-lang="ru">Платформа доступна через партнёра. Введите реферальный код или обратитесь к вашему наставнику.</span>
+        <span data-lang="en">Platform is accessible through a partner. Enter referral code or contact your mentor.</span>
+        <span data-lang="kz">Платформаға серіктес арқылы қол жеткізуге болады. Реферальдық кодты енгізіңіз.</span>
+      </p>
+      <div class="ref-input-group">
+        <input type="text" id="ref-code-input" placeholder="REF CODE" maxlength="20" autocomplete="off">
+        <button id="ref-check-btn" onclick="validateRefCode()">
+          <span data-lang="ru">Проверить</span>
+          <span data-lang="en">Check</span>
+          <span data-lang="kz">Тексеру</span>
+        </button>
+      </div>
+      <div class="ref-error" id="ref-error">
+        <span data-lang="ru">Код не найден. Обратитесь к вашему партнёру.</span>
+        <span data-lang="en">Code not found. Contact your partner.</span>
+        <span data-lang="kz">Код табылмады. Серіктесіңізге хабарласыңыз.</span>
+      </div>
+    </div>
+
+    <!-- FORM (hidden until ref validated) -->
+    <div class="form-section" id="form-section">
+      <div class="form-card">
+        <h3>
+          <span data-lang="ru">Заявка на доступ</span>
+          <span data-lang="en">Access request</span>
+          <span data-lang="kz">Қол жеткізу өтінімі</span>
+        </h3>
+        <p class="form-sub">
+          <span data-lang="ru">Заполните форму — мы свяжемся в течение 24 часов</span>
+          <span data-lang="en">Fill the form — we'll contact you within 24 hours</span>
+          <span data-lang="kz">Форманы толтырыңыз — 24 сағат ішінде хабарласамыз</span>
+        </p>
+        <form id="lead-form" onsubmit="submitForm(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>
+                <span data-lang="ru">Имя *</span>
+                <span data-lang="en">First name *</span>
+                <span data-lang="kz">Аты *</span>
+              </label>
+              <input type="text" id="f-first-name" required placeholder="Ваше имя">
+            </div>
+            <div class="form-group">
+              <label>
+                <span data-lang="ru">Фамилия</span>
+                <span data-lang="en">Last name</span>
+                <span data-lang="kz">Тегі</span>
+              </label>
+              <input type="text" id="f-last-name" placeholder="Фамилия">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="f-email" required placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label>
+              <span data-lang="ru">Телефон *</span>
+              <span data-lang="en">Phone *</span>
+              <span data-lang="kz">Телефон *</span>
+            </label>
+            <input type="tel" id="f-phone" required placeholder="+7 (___) ___-__-__">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>
+                <span data-lang="ru">Страна *</span>
+                <span data-lang="en">Country *</span>
+                <span data-lang="kz">Ел *</span>
+              </label>
+              <select id="f-country" required>
+                <option value="">—</option>
+                <option value="Казахстан">Казахстан</option>
+                <option value="Россия">Россия</option>
+                <option value="Беларусь">Беларусь</option>
+                <option value="Украина">Украина</option>
+                <option value="Германия">Германия</option>
+                <option value="США">США</option>
+                <option value="Другая">Другая</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>
+                <span data-lang="ru">Город</span>
+                <span data-lang="en">City</span>
+                <span data-lang="kz">Қала</span>
+              </label>
+              <input type="text" id="f-city" placeholder="Город">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>
+                <span data-lang="ru">Мессенджер *</span>
+                <span data-lang="en">Messenger *</span>
+                <span data-lang="kz">Мессенджер *</span>
+              </label>
+              <select id="f-messenger" required>
+                <option value="">—</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="telegram">Telegram</option>
+                <option value="instagram">Instagram</option>
+                <option value="email">Email</option>
+                <option value="viber">Viber</option>
+                <option value="other">Другое</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>
+                <span data-lang="ru">Ник / номер *</span>
+                <span data-lang="en">Handle / number *</span>
+                <span data-lang="kz">Ник / нөмір *</span>
+              </label>
+              <input type="text" id="f-messenger-handle" required placeholder="@username или номер">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>
+              <span data-lang="ru">Реферальный код</span>
+              <span data-lang="en">Referral code</span>
+              <span data-lang="kz">Реферальдық код</span>
+            </label>
+            <input type="text" id="form-ref-code" readonly>
+          </div>
+          <div class="form-consent">
+            <input type="checkbox" id="f-consent" required>
+            <label for="f-consent">
+              <span data-lang="ru">Я соглашаюсь на обработку персональных данных согласно <a href="legal.html#privacy">Политике конфиденциальности</a></span>
+              <span data-lang="en">I agree to personal data processing per <a href="legal.html#privacy">Privacy Policy</a></span>
+              <span data-lang="kz">Мен <a href="legal.html#privacy">Құпиялылық саясатына</a> сәйкес дербес деректерді өңдеуге келісемін</span>
+            </label>
+          </div>
+          <button type="submit" class="form-submit" id="form-submit-btn">
+            <span data-lang="ru">Отправить заявку →</span>
+            <span data-lang="en">Submit request →</span>
+            <span data-lang="kz">Өтінім жіберу →</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">system <b>v2</b></div>
+    <div class="footer-links">
+      <a href="#about">
+        <span data-lang="ru">О системе</span><span data-lang="en">About</span><span data-lang="kz">Жүйе туралы</span>
+      </a>
+      <a href="#features">
+        <span data-lang="ru">Возможности</span><span data-lang="en">Features</span><span data-lang="kz">Мүмкіндіктер</span>
+      </a>
+      <a href="reviews.html">
+        <span data-lang="ru">Отзывы</span><span data-lang="en">Reviews</span><span data-lang="kz">Пікірлер</span>
+      </a>
+      <a href="login.html">
+        <span data-lang="ru">Кабинет</span><span data-lang="en">Dashboard</span><span data-lang="kz">Кабинет</span>
+      </a>
+      <a href="legal.html">
+        <span data-lang="ru">Юридическая информация</span><span data-lang="en">Legal</span><span data-lang="kz">Заңды ақпарат</span>
+      </a>
+      <a href="legal.html#disclaimer">
+        <span data-lang="ru">Отказ от гарантий</span><span data-lang="en">Disclaimer</span><span data-lang="kz">Жауапкершіліктен бас тарту</span>
+      </a>
+    </div>
+    <p class="footer-legal">
+      <span data-lang="ru">Система не гарантирует доход. Результаты зависят от индивидуальных усилий партнёра.<br>© 2026 ИП Султанова Сайра · ИИН 710204401190. Все права защищены.</span>
+      <span data-lang="en">The system does not guarantee income. Results depend on individual efforts.<br>© 2026 IE Sultanova Saira · IIN 710204401190. All rights reserved.</span>
+      <span data-lang="kz">Жүйе табысқа кепілдік бермейді. Нәтижелер жеке күш-жігерге байланысты.<br>© 2026 ЖК Сұлтанова Сайра · ЖСН 710204401190. Барлық құқықтар қорғалған.</span>
+    </p>
+  </div>
+</footer>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="success-modal">
+  <div class="modal-box">
+    <div class="modal-icon">✅</div>
+    <h3>
+      <span data-lang="ru">Заявка принята!</span>
+      <span data-lang="en">Request received!</span>
+      <span data-lang="kz">Өтінім қабылданды!</span>
+    </h3>
+    <p>
+      <span data-lang="ru">Свяжемся с вами в течение 24 часов.</span>
+      <span data-lang="en">We'll contact you within 24 hours.</span>
+      <span data-lang="kz">24 сағат ішінде хабарласамыз.</span>
+    </p>
+    <button class="modal-close" onclick="closeModal()">
+      <span data-lang="ru">Закрыть</span>
+      <span data-lang="en">Close</span>
+      <span data-lang="kz">Жабу</span>
+    </button>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>

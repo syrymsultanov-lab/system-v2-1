@@ -1,0 +1,179 @@
+{
+  "name": "WF12 — AI Error & Retry Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fd61ccff-c354-4d2d-b627-665bfcb9c48d",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{workflow_name:$json.workflow?.name || '', execution_id:$json.execution?.id || '', error_message:$json.error?.message || 'Unknown error', timestamp:new Date().toISOString()}];"
+      },
+      "id": "9d506973-1625-4f20-8374-d292a0137610",
+      "name": "Build Error Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/events_log'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {entity_type:'workflow', entity_id:null, event_type:'wf12_error_captured', payload:$json} }}"
+      },
+      "id": "cee9f1b0-42f5-4aa3-9830-34b768883cdd",
+      "name": "Insert Event Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.error_message}}",
+              "rightValue": "timeout",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "3caa9373-bfb5-40a9-af70-6c8a5f09625c",
+      "name": "Decide Retry",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Здесь добавляется логика повторного запуска\nreturn [{action:'retry_manual_review'}];"
+      },
+      "id": "676ddcbd-9efc-4eb6-83e6-eb5d4f798395",
+      "name": "Retry Placeholder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Здесь добавляется уведомление владельцу/админу\nreturn [{action:'escalate'}];"
+      },
+      "id": "d5f1a697-9d7d-4349-97ad-c7450d717811",
+      "name": "Escalate Placeholder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Insert Event Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Event Log": {
+      "main": [
+        [
+          {
+            "node": "Decide Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Retry": {
+      "main": [
+        [
+          {
+            "node": "Retry Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Escalate Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "meta": {
+    "template": "SYSTEM_V2_v1"
+  },
+  "versionId": "4cf1552c-3cd3-4b7d-8485-1f9f0967e4b5"
+}

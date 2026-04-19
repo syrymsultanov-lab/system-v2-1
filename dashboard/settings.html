@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Настройки — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    /* ===== SETTINGS-SPECIFIC ===== */
+    .set-sec {
+      display:flex; flex-direction:column; gap:10px;
+      padding-top:4px;
+    }
+    .set-row {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:12px 14px;
+      background:var(--gl); border:1px solid var(--brd); border-radius:12px;
+      transition:border-color .15s;
+    }
+    .set-row:hover { border-color:var(--brd-a); }
+    .set-row.stack { flex-direction:column; align-items:stretch; gap:10px; }
+    .set-l { flex:1; min-width:0; }
+    .set-r { flex:none; display:flex; align-items:center; gap:10px; }
+    .set-t {
+      font-size:13px; font-weight:600; color:var(--tb);
+      display:flex; align-items:center; gap:8px;
+    }
+    .set-d {
+      font-size:11px; color:var(--td); margin-top:3px; line-height:1.45;
+    }
+    .set-d code {
+      font-family:'JetBrains Mono',monospace; font-size:10.5px;
+      color:var(--azure); background:rgba(0,180,216,.08);
+      padding:1px 5px; border-radius:4px;
+    }
+
+    /* Input */
+    .set-inp, .set-sel, .set-txt {
+      width:100%; padding:9px 12px; font-size:13px; font-family:inherit;
+      background:var(--panel); color:var(--tb);
+      border:1px solid var(--brd); border-radius:9px;
+      transition:border-color .15s;
+    }
+    .set-inp:focus, .set-sel:focus, .set-txt:focus { outline:none; border-color:var(--brd-a); }
+    .set-inp[readonly], .set-inp.ro { color:var(--td); background:var(--gl); cursor:default; }
+    .set-txt { min-height:82px; resize:vertical; line-height:1.45; }
+    .set-inp.small { width:140px; }
+    .set-sel { width:auto; min-width:180px; }
+    .set-inp.mono { font-family:'JetBrains Mono',monospace; font-size:12px; }
+
+    /* Toggle switch */
+    .tsw {
+      position:relative; display:inline-block;
+      width:42px; height:24px; flex-shrink:0; cursor:pointer;
+    }
+    .tsw input { opacity:0; width:0; height:0; }
+    .tsw-s {
+      position:absolute; inset:0; background:var(--panel);
+      border:1px solid var(--brd); border-radius:24px;
+      transition:all .2s;
+    }
+    .tsw-s::before {
+      content:''; position:absolute; left:3px; top:2px;
+      width:18px; height:18px; background:var(--td); border-radius:50%;
+      transition:all .2s;
+    }
+    .tsw input:checked + .tsw-s { background:rgba(6,214,160,.18); border-color:var(--green); }
+    .tsw input:checked + .tsw-s::before { left:21px; background:var(--green); }
+
+    /* Segmented control */
+    .seg {
+      display:inline-flex; gap:2px;
+      background:var(--panel); border:1px solid var(--brd);
+      border-radius:10px; padding:3px;
+    }
+    .seg button {
+      padding:6px 12px; font-size:11.5px; font-weight:600;
+      background:none; border:none; color:var(--td);
+      border-radius:7px; cursor:pointer; transition:all .15s;
+      font-family:inherit;
+    }
+    .seg button:hover { color:var(--tm); }
+    .seg button.active { background:var(--card); color:var(--azure); }
+
+    /* Integration card */
+    .int-card {
+      display:flex; gap:12px; align-items:center;
+      padding:14px; background:var(--gl);
+      border:1px solid var(--brd); border-radius:12px;
+    }
+    .int-ico {
+      width:40px; height:40px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; flex-shrink:0;
+    }
+    .int-ico.wa  { background:rgba(37,211,102,.12); border:1px solid rgba(37,211,102,.25); }
+    .int-ico.tg  { background:rgba(0,136,204,.12);  border:1px solid rgba(0,136,204,.25);  }
+    .int-ico.ig  { background:rgba(228,64,95,.12);  border:1px solid rgba(228,64,95,.25);  }
+    .int-ico.em  { background:rgba(144,224,239,.08); border:1px solid rgba(144,224,239,.25); }
+    .int-ico.n8  { background:rgba(234,69,69,.10);  border:1px solid rgba(234,69,69,.22);  }
+    .int-ico.sb  { background:rgba(62,207,142,.10); border:1px solid rgba(62,207,142,.22); }
+    .int-b { flex:1; min-width:0; }
+    .int-t { font-size:13px; font-weight:600; color:var(--tb); }
+    .int-s {
+      font-size:11px; color:var(--td); margin-top:2px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .int-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .int-dot.on  { background:var(--green); box-shadow:0 0 6px rgba(6,214,160,.5); }
+    .int-dot.off { background:var(--td); }
+    .int-dot.err { background:var(--coral); }
+
+    .danger-zone {
+      background:linear-gradient(135deg,rgba(255,107,107,.05),rgba(255,107,107,.02));
+      border-color:rgba(255,107,107,.18);
+    }
+    .danger-zone .pnl-t { color:var(--coral); }
+
+    .set-nav {
+      display:flex; gap:3px; flex-wrap:wrap; margin-bottom:14px;
+    }
+    .badge-compl {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:3px 9px; font-size:11px; font-weight:700; border-radius:20px;
+      background:var(--grn-s); color:var(--green);
+      border:1px solid rgba(6,214,160,.25);
+    }
+
+    .bar-wrap {
+      height:6px; background:var(--gl); border-radius:10px; overflow:hidden;
+      border:1px solid var(--brd);
+    }
+    .bar-fill {
+      height:100%; background:linear-gradient(90deg,var(--azure),var(--green));
+      transition:width .3s ease;
+    }
+
+    .kv-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:10px;
+    }
+
+    @media (max-width:700px) {
+      .set-row { flex-direction:column; align-items:stretch; }
+      .set-r { width:100%; justify-content:flex-start; flex-wrap:wrap; }
+      .set-inp.small { width:100%; }
+      .set-sel { min-width:0; width:100%; }
+    }
+  </style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>Настройки</h2>
+      <p>Профиль партнёра, AI-агент, мессенджеры и интеграции. Изменения применяются сразу. Чувствительные действия (смена пароля, выход из всех сессий) требуют подтверждения.</p>
+    </div>
+    <div class="welcome-r">
+      <div class="wdate">Заполнено: <b id="t-compl">0%</b></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sc">
+      <div class="sc-top"><div class="sc-icon si1">👤</div><div class="sc-trend tu" id="st-compl-trend">+0</div></div>
+      <div class="sc-val" id="st-compl">0%</div>
+      <div class="sc-lbl">Профиль заполнен</div>
+    </div>
+    <div class="sc">
+      <div class="sc-top"><div class="sc-icon si2">🤖</div><div class="sc-trend tu"></div></div>
+      <div class="sc-val" id="st-ai">—</div>
+      <div class="sc-lbl">AI-агент</div>
+    </div>
+    <div class="sc">
+      <div class="sc-top"><div class="sc-icon si3">📱</div><div class="sc-trend tu"></div></div>
+      <div class="sc-val" id="st-int">0 / 4</div>
+      <div class="sc-lbl">Мессенджеры подключены</div>
+    </div>
+    <div class="sc">
+      <div class="sc-top"><div class="sc-icon si4">🔐</div><div class="sc-trend tu"></div></div>
+      <div class="sc-val" id="st-login" style="font-size:16px">—</div>
+      <div class="sc-lbl">Последний вход</div>
+    </div>
+  </div>
+
+  <div class="pnl" style="padding:14px 22px">
+    <div class="set-nav" id="set-nav">
+      <button class="pt active" data-s="profile">👤 Профиль</button>
+      <button class="pt" data-s="partner">🎯 Партнёр</button>
+      <button class="pt" data-s="ai">🤖 AI-агент</button>
+      <button class="pt" data-s="messengers">📱 Мессенджеры</button>
+      <button class="pt" data-s="notify">🔔 Уведомления</button>
+      <button class="pt" data-s="security">🔐 Безопасность</button>
+      <button class="pt" data-s="integrations">🌐 Интеграции</button>
+      <button class="pt" data-s="legal">📜 Юридическое</button>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div class="pnl set-panel" data-p="profile">
+    <div class="pnl-h">
+      <div class="pnl-t">👤 Профиль партнёра</div>
+      <span class="badge-compl"><i>●</i> <span id="compl-pct">0%</span> заполнено</span>
+    </div>
+    <div class="bar-wrap" style="margin-bottom:14px"><div class="bar-fill" id="compl-bar" style="width:0%"></div></div>
+
+    <div class="set-sec">
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Имя и фамилия</div>
+          <div class="set-d">Отображается в письмах, подписи шаблонов через <code>{{my_name}}</code></div>
+        </div>
+        <div class="kv-grid">
+          <input type="text" class="set-inp" id="f-firstname" placeholder="Имя" value="Сайра">
+          <input type="text" class="set-inp" id="f-lastname" placeholder="Фамилия" value="Алимжанова">
+        </div>
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Email</div>
+          <div class="set-d">Для уведомлений и восстановления пароля. Используется как логин.</div>
+        </div>
+        <input type="email" class="set-inp" id="f-email" value="saira@sairateam.com">
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Телефон</div>
+          <div class="set-d">Формат E.164 (<code>+77011234567</code>). Используется для WhatsApp-привязки.</div>
+        </div>
+        <input type="tel" class="set-inp" id="f-phone" value="+77011234567">
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Город</div>
+          <div class="set-d">Подставляется в шаблоны как <code>{{my_city}}</code>, используется для таргетинга лидов</div>
+        </div>
+        <input type="text" class="set-inp" id="f-city" value="Алматы">
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">О себе / bio</div>
+          <div class="set-d">Короткое представление (до 280 символов). AI использует как контекст в первых сообщениях.</div>
+        </div>
+        <textarea class="set-txt" id="f-bio" maxlength="280">Team leader InCruises, 3 года в индустрии путешествий. Помогаю людям открывать мир через клуб — не обещая, а показывая цифры.</textarea>
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Часовой пояс</div>
+          <div class="set-d">Важно для tasks-напоминаний и часов тишины AI-агента.</div>
+        </div>
+        <select class="set-sel" id="f-tz">
+          <option value="Asia/Almaty" selected>Алматы (UTC+5)</option>
+          <option value="Asia/Aqtau">Актау (UTC+5)</option>
+          <option value="Europe/Moscow">Москва (UTC+3)</option>
+          <option value="Europe/Kiev">Киев (UTC+2)</option>
+          <option value="Asia/Dubai">Дубай (UTC+4)</option>
+          <option value="Asia/Bangkok">Бангкок (UTC+7)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="mbtn mbtn-p" onclick="saveProfile()">💾 Сохранить профиль</button>
+      <button class="mbtn" onclick="resetProfile()">↺ Отменить</button>
+    </div>
+  </div>
+
+  <!-- ===== PARTNER ===== -->
+  <div class="pnl set-panel" data-p="partner">
+    <div class="pnl-h">
+      <div class="pnl-t">🎯 Партнёрский аккаунт</div>
+      <span class="badge-compl" style="background:rgba(255,183,3,.12);color:var(--sun);border-color:rgba(255,183,3,.25)"><i>⭐</i> SMD</span>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Реф-код</div>
+          <div class="set-d">Присваивается системой, не редактируется. Это ваш идентификатор в команде.</div>
+        </div>
+        <div class="set-r">
+          <input type="text" class="set-inp mono small ro" id="f-refcode" value="TEST001" readonly>
+          <button class="mbtn mbtn-p" onclick="copyRef()">📋</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Реф-ссылка</div>
+          <div class="set-d">Основная ссылка на лендинг. Открывается из кнопки «Пригласить» в контактах.</div>
+        </div>
+        <div class="set-r">
+          <input type="text" class="set-inp mono ro" id="f-reflink" value="https://sairateam.com/?ref=TEST001" readonly style="width:280px">
+          <button class="mbtn mbtn-p" onclick="copyRefLink()">📋</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Текущий ранг</div>
+          <div class="set-d">Рассчитывается из личного и групповых объёмов. Подробнее — вкладка <b>Структура</b>.</div>
+        </div>
+        <div class="set-r"><span class="badge-compl" style="background:rgba(255,183,3,.12);color:var(--sun);border-color:rgba(255,183,3,.25)"><i>⭐</i> SMD · $1 487</span></div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Upline / спонсор</div>
+          <div class="set-d">Партнёр, пригласивший вас в команду. Фиксируется при регистрации.</div>
+        </div>
+        <div class="set-r"><b style="color:var(--tb)">Марат Нурсапа</b> · <span style="color:var(--td);font-family:monospace;font-size:11px">MARAT-N</span></div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">В команде с</div>
+          <div class="set-d">Дата регистрации в <code>public.partners</code>.</div>
+        </div>
+        <div class="set-r"><b style="color:var(--tb)">2024-09-12</b> · <span style="color:var(--td)">1 год 7 мес.</span></div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Статус аккаунта</div>
+          <div class="set-d">Активные партнёры получают лиды с лендинга и видят полный дашборд.</div>
+        </div>
+        <div class="set-r"><span class="int-dot on"></span><b style="color:var(--green)">Активен</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AI ===== -->
+  <div class="pnl set-panel" data-p="ai">
+    <div class="pnl-h">
+      <div class="pnl-t">🤖 AI-агент</div>
+      <div class="ai-on"><i></i>онлайн</div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Включить AI-агента</div>
+          <div class="set-d">Глобальный свитчер. Выключает генерацию черновиков, авто follow-up и напоминания.</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="f-ai-on" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Режим работы</div>
+          <div class="set-d">
+            <b>Полуавтомат</b> — AI готовит черновик, вы подтверждаете отправку. <b>Ручной</b> — AI только предлагает шаблоны.
+            Полностью автоматический режим недоступен (InCruises compliance + Meta/WABA policy).
+          </div>
+        </div>
+        <div class="seg" id="seg-mode">
+          <button class="active" data-v="semi">Полуавтомат</button>
+          <button data-v="manual">Ручной</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Язык черновиков</div>
+          <div class="set-d">AI будет подбирать язык под лид автоматически, но при ручном выборе — использует только заданный.</div>
+        </div>
+        <select class="set-sel" id="f-ai-lang">
+          <option value="auto" selected>🌐 Авто (по языку лида)</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="kk">🇰🇿 Қазақша</option>
+          <option value="en">🇬🇧 English</option>
+        </select>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Тон общения</div>
+          <div class="set-d">Управляет стилистикой черновиков. Экспериментальный параметр — может меняться в A/B.</div>
+        </div>
+        <div class="seg" id="seg-tone">
+          <button class="active" data-v="warm">Тёплый</button>
+          <button data-v="neutral">Нейтральный</button>
+          <button data-v="formal">Деловой</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Часы тишины</div>
+          <div class="set-d">AI не отправляет follow-up и напоминания в этот интервал. Часовой пояс — из профиля (<span id="f-tz-echo">Asia/Almaty</span>).</div>
+        </div>
+        <div class="set-r">
+          <input type="time" class="set-inp small" id="f-quiet-from" value="22:00">
+          <span style="color:var(--td)">—</span>
+          <input type="time" class="set-inp small" id="f-quiet-to" value="09:00">
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Авто follow-up</div>
+          <div class="set-d">Через сколько часов AI ставит задачу «Напомнить», если лид не ответил.</div>
+        </div>
+        <select class="set-sel" id="f-fu">
+          <option value="12">Через 12 часов</option>
+          <option value="24" selected>Через 24 часа</option>
+          <option value="48">Через 48 часов</option>
+          <option value="off">Не ставить</option>
+        </select>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Разрешить AI автоотправку welcome-сообщения</div>
+          <div class="set-d">Только для авто-подтверждения заявки (шаблон <code>sys_consent_confirm</code>). Всё остальное — всегда через ваше одобрение.</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="f-ai-welcome" checked><span class="tsw-s"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MESSENGERS ===== -->
+  <div class="pnl set-panel" data-p="messengers">
+    <div class="pnl-h">
+      <div class="pnl-t">📱 Мессенджеры</div>
+      <div style="font-size:11px;color:var(--td)">Подключены: <b id="int-count" style="color:var(--azure)">0</b> / 4</div>
+    </div>
+
+    <div class="set-sec">
+      <div class="int-card">
+        <div class="int-ico wa">🟢</div>
+        <div class="int-b">
+          <div class="int-t">WhatsApp Business (WABA)</div>
+          <div class="int-s"><span class="int-dot off" id="dot-wa"></span><span id="lbl-wa">Не подключено · Meta Business + 360dialog / Twilio</span></div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn mbtn-p" onclick="toggleInt('wa')" id="btn-wa">Подключить</button>
+        </div>
+      </div>
+
+      <div class="int-card">
+        <div class="int-ico tg">✈️</div>
+        <div class="int-b">
+          <div class="int-t">Telegram</div>
+          <div class="int-s"><span class="int-dot on" id="dot-tg"></span><span id="lbl-tg">Подключено · @sairateam_bot · вебхук активен</span></div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn" onclick="toggleInt('tg')" id="btn-tg">Отключить</button>
+        </div>
+      </div>
+
+      <div class="int-card">
+        <div class="int-ico ig">📷</div>
+        <div class="int-b">
+          <div class="int-t">Instagram Direct</div>
+          <div class="int-s"><span class="int-dot off" id="dot-ig"></span><span id="lbl-ig">Не подключено · Meta Business Account required</span></div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn mbtn-p" onclick="toggleInt('ig')" id="btn-ig">Подключить</button>
+        </div>
+      </div>
+
+      <div class="int-card">
+        <div class="int-ico em">✉️</div>
+        <div class="int-b">
+          <div class="int-t">Email (SMTP)</div>
+          <div class="int-s"><span class="int-dot on" id="dot-em"></span><span id="lbl-em">Подключено · saira@sairateam.com · Yandex 360</span></div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn" onclick="toggleInt('em')" id="btn-em">Настроить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICATIONS ===== -->
+  <div class="pnl set-panel" data-p="notify">
+    <div class="pnl-h"><div class="pnl-t">🔔 Уведомления</div></div>
+    <div class="set-sec">
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">🎯 Новая заявка</div>
+          <div class="set-d">Push в браузере + email, когда через лендинг приходит лид</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-lead" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">💬 Ответ от лида</div>
+          <div class="set-d">Когда лид отвечает в WhatsApp / Telegram — появляется задача в <b>tasks</b></div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-reply" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">✅ Напоминание о задаче</div>
+          <div class="set-d">За 15 минут до срока задачи</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-task" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">🤖 AI-черновик готов</div>
+          <div class="set-d">Когда AI подготовил follow-up, требующий вашего одобрения</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-draft" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">🌅 Утренний дайджест</div>
+          <div class="set-d">В <b>09:00</b>: задачи на сегодня, новые лиды, прогресс ранга</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-digest" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">🌳 Событие в структуре</div>
+          <div class="set-d">Новые партнёры в downline, повышение ранга у подопечного</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-tree"><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">📬 Канал доставки</div>
+          <div class="set-d">Куда отправлять уведомления (email всегда дублируется как fallback)</div>
+        </div>
+        <div class="seg" id="seg-nch">
+          <button data-v="email">✉️ Email</button>
+          <button class="active" data-v="tg">✈️ Telegram</button>
+          <button data-v="both">🔀 Оба</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECURITY ===== -->
+  <div class="pnl set-panel" data-p="security">
+    <div class="pnl-h"><div class="pnl-t">🔐 Безопасность</div></div>
+    <div class="set-sec">
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Пароль</div>
+          <div class="set-d">Последняя смена: <b style="color:var(--tb)">2026-03-28</b></div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn mbtn-p" onclick="openPwdModal()">🔑 Сменить пароль</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Двухфакторная авторизация (2FA)</div>
+          <div class="set-d">TOTP через Google Authenticator / 1Password. Скоро — пока не активна.</div>
+        </div>
+        <label class="tsw" style="opacity:.5;cursor:not-allowed"><input type="checkbox" disabled><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Активные сессии</div>
+          <div class="set-d">Этот браузер · Chrome 124 · Windows · Алматы · последняя активность сейчас</div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn" onclick="logoutOthers()">⎋ Выйти везде</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Последние входы</div>
+          <div class="set-d">Полный журнал — вкладка <b>История</b> → категория «Логин»</div>
+        </div>
+        <div class="set-r">
+          <a href="history.html?cat=auth" class="mbtn">📜 Открыть журнал</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INTEGRATIONS ===== -->
+  <div class="pnl set-panel" data-p="integrations">
+    <div class="pnl-h"><div class="pnl-t">🌐 Интеграции</div></div>
+    <div class="set-sec">
+      <div class="int-card">
+        <div class="int-ico sb">🟩</div>
+        <div class="int-b">
+          <div class="int-t">Supabase</div>
+          <div class="int-s"><span class="int-dot on"></span>Project <code style="color:var(--azure);font-family:monospace;font-size:11px">njwraxmlzglmofxiwmxs</code> · eu-central-1 · 15 таблиц</div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn" onclick="showToast('Откройте Supabase Dashboard для управления.')">Открыть</button>
+        </div>
+      </div>
+
+      <div class="int-card">
+        <div class="int-ico n8">🔴</div>
+        <div class="int-b">
+          <div class="int-t">n8n (Hostinger VPS)</div>
+          <div class="int-s"><span class="int-dot off"></span>Не подключено · будет активировано на этапе AI-агента</div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn mbtn-p" onclick="showToast('🔧 Подключение n8n — на этапе AI-агента.')">Настроить</button>
+        </div>
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Webhook лендинга → Supabase</div>
+          <div class="set-d">Куда уходит форма с <code>sairateam.com</code>. Меняется только если переезжаете на другой проект.</div>
+        </div>
+        <input type="text" class="set-inp mono ro" value="https://njwraxmlzglmofxiwmxs.supabase.co/rest/v1/leads" readonly>
+      </div>
+
+      <div class="set-row stack">
+        <div class="set-l">
+          <div class="set-t">Publishable key</div>
+          <div class="set-d">Публичный ключ anon (после rotate в коммите 75ce35c). Безопасен для клиента.</div>
+        </div>
+        <div class="set-r" style="width:100%">
+          <input type="text" class="set-inp mono ro" id="f-pubkey" value="sb_publishable_•••••••••••••••••_rotated" readonly>
+          <button class="mbtn mbtn-p" onclick="showToast('🔍 Полный ключ — в .env.example и config лендинга.')">👁</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LEGAL ===== -->
+  <div class="pnl set-panel" data-p="legal">
+    <div class="pnl-h"><div class="pnl-t">📜 Юридическое и согласия</div></div>
+    <div class="set-sec">
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Юрлицо</div>
+          <div class="set-d">Реквизиты на лендинге в футере и в legal.html</div>
+        </div>
+        <div class="set-r"><b style="color:var(--tb)">ИП Султанова</b></div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Согласие на обработку персональных данных</div>
+          <div class="set-d">Подписано при регистрации · <a href="../legal.html" target="_blank" style="color:var(--azure)">посмотреть текст</a></div>
+        </div>
+        <div class="set-r"><span class="int-dot on"></span><b style="color:var(--green)">Подписано</b> · 2024-09-12</div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Согласие на маркетинг</div>
+          <div class="set-d">Разрешает получать обновления о продукте и образовательные материалы.</div>
+        </div>
+        <label class="tsw"><input type="checkbox" id="n-mkt" checked><span class="tsw-s"></span></label>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">InCruises Compliance</div>
+          <div class="set-d">Правило: <b>никаких гарантий дохода</b>. AI и шаблоны не должны обещать конкретные суммы — валидируется при активации модуля.</div>
+        </div>
+        <div class="set-r"><span class="int-dot on"></span><b style="color:var(--green)">Соблюдается</b></div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t">Meta / WABA Policy</div>
+          <div class="set-d">Opt-in обязателен до любой отправки в WhatsApp. Шаблоны WABA одобряются Meta отдельно.</div>
+        </div>
+        <div class="set-r"><span class="int-dot on"></span><b style="color:var(--green)">Соблюдается</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DANGER ZONE ===== -->
+  <div class="pnl danger-zone set-panel" data-p="security">
+    <div class="pnl-h"><div class="pnl-t">⚠️ Danger zone</div></div>
+    <div class="set-sec">
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t" style="color:var(--coral)">Выгрузить мои данные</div>
+          <div class="set-d">JSON со всеми вашими лидами, контактами, задачами и событиями. Запрос обрабатывается до 24 часов.</div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn" onclick="showToast('📦 Запрос принят. Отчёт придёт на email.')">📦 Запросить экспорт</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-t" style="color:var(--coral)">Удалить аккаунт</div>
+          <div class="set-d">Безвозвратно. Лиды остаются у компании (InCruises policy), но привязка к вам снимается. Reversal невозможен.</div>
+        </div>
+        <div class="set-r">
+          <button class="mbtn mbtn-r" onclick="deleteAccount()">🗑 Удалить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Password change modal -->
+<div class="modal" id="pwd-modal">
+  <div class="modal-backdrop" onclick="closePwdModal()"></div>
+  <div class="modal-box" style="max-width:460px">
+    <button class="modal-close" onclick="closePwdModal()">✕</button>
+    <div class="modal-head">
+      <div class="la lead-ava" style="background:linear-gradient(135deg,var(--ocean),var(--azure))">🔑</div>
+      <div>
+        <div class="modal-ttl">Сменить пароль</div>
+        <div class="modal-sub">Минимум 8 символов, одна цифра, одна буква</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input type="password" class="set-inp" id="pwd-old" placeholder="Текущий пароль">
+      <input type="password" class="set-inp" id="pwd-new" placeholder="Новый пароль">
+      <input type="password" class="set-inp" id="pwd-new2" placeholder="Повторите новый пароль">
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="mbtn mbtn-p" onclick="submitPwd()">💾 Сохранить</button>
+      <button class="mbtn" onclick="closePwdModal()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('settings');
+
+// ====== MOCK STATE ======
+const INT_STATE = { wa:false, tg:true, ig:false, em:true };
+let aiMode   = 'semi';
+let aiTone   = 'warm';
+let ntfCh    = 'tg';
+
+const MY_REF = 'TEST001';
+const MY_REF_LINK = 'https://sairateam.com/?ref=' + MY_REF;
+
+// ====== PROFILE COMPLETENESS ======
+const profileFields = ['f-firstname','f-lastname','f-email','f-phone','f-city','f-bio','f-tz'];
+function calcCompleteness() {
+  const filled = profileFields.filter(id => {
+    const el = document.getElementById(id); return el && el.value && el.value.trim().length > 0;
+  }).length;
+  return Math.round((filled / profileFields.length) * 100);
+}
+function updateCompleteness() {
+  const pct = calcCompleteness();
+  document.getElementById('st-compl').textContent = pct + '%';
+  document.getElementById('t-compl').textContent = pct + '%';
+  document.getElementById('compl-pct').textContent = pct + '%';
+  document.getElementById('compl-bar').style.width = pct + '%';
+  document.getElementById('st-compl-trend').textContent = pct === 100 ? '✓' : '+' + pct;
+}
+
+// ====== INTEGRATION COUNT ======
+function updateIntegrations() {
+  const on = Object.values(INT_STATE).filter(Boolean).length;
+  document.getElementById('st-int').textContent = on + ' / 4';
+  const ic = document.getElementById('int-count');
+  if (ic) ic.textContent = on;
+}
+
+// ====== AI / LOGIN BADGES ======
+function updateTop() {
+  document.getElementById('st-ai').textContent = document.getElementById('f-ai-on').checked
+    ? (aiMode === 'semi' ? 'Полу-авто' : 'Ручной') : 'OFF';
+  document.getElementById('st-login').textContent = 'сегодня · 09:14';
+}
+
+// ====== NAV ======
+document.getElementById('set-nav').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#set-nav .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const target = document.querySelector(`.set-panel[data-p="${btn.dataset.s}"]`);
+  if (target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
+// ====== PROFILE ======
+profileFields.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateCompleteness);
+});
+document.getElementById('f-tz').addEventListener('change', e => {
+  document.getElementById('f-tz-echo').textContent = e.target.value;
+});
+
+function saveProfile() {
+  updateCompleteness();
+  showToast('💾 Профиль сохранён локально. Запись в БД — после миграции partner_settings.');
+}
+function resetProfile() {
+  if (!confirm('Сбросить несохранённые изменения?')) return;
+  location.reload();
+}
+
+// ====== PARTNER ======
+function copyRef() {
+  if (navigator.clipboard) navigator.clipboard.writeText(MY_REF).catch(() => {});
+  showToast('📋 Реф-код скопирован: ' + MY_REF);
+}
+function copyRefLink() {
+  if (navigator.clipboard) navigator.clipboard.writeText(MY_REF_LINK).catch(() => {});
+  showToast('📋 Реф-ссылка скопирована');
+}
+
+// ====== AI ======
+document.getElementById('f-ai-on').addEventListener('change', updateTop);
+
+document.getElementById('seg-mode').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#seg-mode button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); aiMode = b.dataset.v; updateTop();
+  showToast(aiMode === 'semi' ? '🤖 Режим: Полуавтомат' : '✋ Режим: Ручной');
+});
+
+document.getElementById('seg-tone').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#seg-tone button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); aiTone = b.dataset.v;
+});
+
+document.getElementById('seg-nch').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#seg-nch button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); ntfCh = b.dataset.v;
+});
+
+// ====== MESSENGERS ======
+const INT_LABEL = {
+  wa: { on:'Подключено · Meta Business + 360dialog', off:'Не подключено · Meta Business + 360dialog / Twilio' },
+  tg: { on:'Подключено · @sairateam_bot · вебхук активен', off:'Не подключено' },
+  ig: { on:'Подключено · Meta Business', off:'Не подключено · Meta Business Account required' },
+  em: { on:'Подключено · saira@sairateam.com · Yandex 360', off:'Не настроено · SMTP required' },
+};
+function applyIntView(k) {
+  const on = INT_STATE[k];
+  document.getElementById('dot-'+k).classList.toggle('on', on);
+  document.getElementById('dot-'+k).classList.toggle('off', !on);
+  document.getElementById('lbl-'+k).textContent = on ? INT_LABEL[k].on : INT_LABEL[k].off;
+  const btn = document.getElementById('btn-'+k);
+  btn.textContent = on ? 'Отключить' : 'Подключить';
+  btn.className = 'mbtn' + (on ? '' : ' mbtn-p');
+  updateIntegrations();
+  updateTop();
+}
+function toggleInt(k) {
+  if (k === 'em') { showToast('✉️ Настройка SMTP — отдельная форма, появится вместе с миграцией.'); return; }
+  if (k === 'wa' && !INT_STATE.wa) { showToast('🟢 Для WABA нужен Meta Business ID — раздел в разработке.'); return; }
+  if (k === 'ig' && !INT_STATE.ig) { showToast('📷 Instagram Direct — требует Meta Business Account, раздел в разработке.'); return; }
+  INT_STATE[k] = !INT_STATE[k];
+  applyIntView(k);
+  showToast(INT_STATE[k] ? '🟢 Подключено' : '⚪ Отключено');
+}
+
+// ====== SECURITY ======
+function openPwdModal() { document.getElementById('pwd-modal').classList.add('active'); }
+function closePwdModal() {
+  document.getElementById('pwd-modal').classList.remove('active');
+  ['pwd-old','pwd-new','pwd-new2'].forEach(id => document.getElementById(id).value = '');
+}
+function submitPwd() {
+  const o = document.getElementById('pwd-old').value;
+  const n = document.getElementById('pwd-new').value;
+  const n2 = document.getElementById('pwd-new2').value;
+  if (!o || !n) { showToast('⚠️ Заполните оба поля.'); return; }
+  if (n.length < 8) { showToast('⚠️ Минимум 8 символов.'); return; }
+  if (n !== n2) { showToast('⚠️ Пароли не совпадают.'); return; }
+  closePwdModal();
+  showToast('🔑 Смена пароля будет проведена через Supabase auth.updateUser().');
+}
+function logoutOthers() {
+  if (!confirm('Разлогинить все другие сессии?')) return;
+  showToast('⎋ Другие сессии завершены (будет через supabase.auth.signOut({ scope:\"others\" })).');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePwdModal(); });
+
+// ====== DANGER ======
+function deleteAccount() {
+  const v = prompt('Введите слово "УДАЛИТЬ" для подтверждения:');
+  if (v !== 'УДАЛИТЬ') { showToast('⚠️ Удаление отменено.'); return; }
+  showToast('🗑 Запрос на удаление отправлен. Обработка 24 часа.');
+}
+
+// ====== TOAST (shared utility) ======
+function showToast(msg) {
+  let el = document.getElementById('app-toast');
+  if (!el) { el = document.createElement('div'); el.id = 'app-toast'; el.className = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ====== INIT ======
+Object.keys(INT_STATE).forEach(applyIntView);
+updateCompleteness();
+updateIntegrations();
+updateTop();
+</script>
+</body>
+</html>

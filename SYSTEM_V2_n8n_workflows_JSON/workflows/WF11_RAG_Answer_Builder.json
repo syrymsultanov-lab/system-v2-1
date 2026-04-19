@@ -1,0 +1,268 @@
+{
+  "name": "WF11 — RAG Answer Builder",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "system-v2/rag-answer",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9f34bc1c-2742-44a9-862e-21ad088b823a",
+      "name": "Webhook RAG",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json; return [{partner_id:b.partner_id||'', question:b.question||''}];"
+      },
+      "id": "33b76f67-eaeb-4e2e-b0ec-02aa13145102",
+      "name": "Normalize Question",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -780,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/knowledge_chunks?select=source_id,content,metadata&limit=10'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      },
+      "id": "ccfe4c91-3744-4c5b-8811-33ecc2113eb1",
+      "name": "Fetch Chunks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const chunks = Array.isArray($json.body)?$json.body:[]; const context = chunks.map(c => c.content).join('\\n\\n'); return [{question:$('Normalize Question').item.json.question, partner_id:$('Normalize Question').item.json.partner_id, context}];"
+      },
+      "id": "c1c39104-ab1f-4300-b24a-613fbb55159e",
+      "name": "Build Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.OPENAI_BASE_URL || 'https://api.openai.com/v1/chat/completions'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.OPENAI_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {model:$env.OPENAI_MODEL || 'gpt-4.1-mini', messages:[{role:'system', content:'Answer only from provided context.'},{role:'user', content:'Question: ' + $json.question + '\\n\\nContext:\\n' + $json.context}] } }}"
+      },
+      "id": "3d98acfa-4165-4e16-b050-1189283614c2",
+      "name": "OpenAI Answer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{partner_id:$('Build Context').item.json.partner_id, answer:$json.body?.choices?.[0]?.message?.content || ''}];"
+      },
+      "id": "64c981c0-58ab-4dc6-a12a-f1f2bcaaaa5b",
+      "name": "Extract Answer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        110,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/ai_recommendations'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {partner_id:$json.partner_id, target_type:'knowledge', recommendation_type:'rag_answer', recommendation_payload:{answer:$json.answer}, confidence:0.65} }}"
+      },
+      "id": "f91cf0d6-7d8a-4b1e-afdc-bc8a5647e219",
+      "name": "Save Recommendation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        330,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:true, answer:$json.answer} }}",
+        "options": {}
+      },
+      "id": "fe11beb5-3b1b-4302-936a-97822825c9f7",
+      "name": "Respond Answer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook RAG": {
+      "main": [
+        [
+          {
+            "node": "Normalize Question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Question": {
+      "main": [
+        [
+          {
+            "node": "Fetch Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Chunks": {
+      "main": [
+        [
+          {
+            "node": "Build Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Context": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Answer": {
+      "main": [
+        [
+          {
+            "node": "Extract Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Answer": {
+      "main": [
+        [
+          {
+            "node": "Save Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Respond Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "meta": {
+    "template": "SYSTEM_V2_v1"
+  },
+  "versionId": "0eb0de2f-f046-4c6f-9444-d8ee1a140041"
+}

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>История — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    .h-day-hdr {
+      display:flex; align-items:center; gap:10px;
+      margin: 18px 0 8px; padding: 0 4px;
+    }
+    .h-day-hdr:first-child { margin-top: 4px; }
+    .h-day-ttl {
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; font-weight:700; color:var(--tb);
+      letter-spacing:.6px; text-transform:uppercase;
+    }
+    .h-day-cnt {
+      font-size:10px; font-weight:700;
+      color:var(--td); background:var(--gl);
+      padding:2px 8px; border-radius:7px;
+      border:1px solid var(--brd);
+    }
+    .h-day-line { flex:1; height:1px; background:var(--brd); }
+
+    .ev {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:11px 14px; background:var(--panel);
+      border:1px solid var(--brd); border-radius:11px;
+      cursor:pointer; transition:all .18s;
+      margin-bottom:6px;
+    }
+    .ev:hover { border-color:var(--brd-a); background:var(--card); }
+    .ev-time {
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; color:var(--td); font-weight:600;
+      min-width:46px; padding-top:2px;
+    }
+    .ev-icon {
+      width:32px; height:32px; border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:14px; flex-shrink:0;
+    }
+    .ev-icon.cl { background:rgba(0,180,216,.12); }
+    .ev-icon.cg { background:var(--grn-s); }
+    .ev-icon.cs { background:rgba(255,183,3,.12); }
+    .ev-icon.cr { background:rgba(255,107,107,.12); }
+    .ev-icon.csk{ background:rgba(144,224,239,.10); }
+    .ev-icon.cmu{ background:var(--gl); }
+
+    .ev-b { flex:1; min-width:0; }
+    .ev-t { font-size:13px; font-weight:600; color:var(--tb); line-height:1.35; }
+    .ev-t b { color:var(--azure); font-weight:700; }
+    .ev-m { font-size:11px; color:var(--td); margin-top:3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ev-actor {
+      font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px;
+      letter-spacing:.3px;
+    }
+    .ev-actor.ai      { color:var(--azure); background:rgba(0,180,216,.10); border:1px solid rgba(0,180,216,.22); }
+    .ev-actor.system  { color:var(--sun);   background:rgba(255,183,3,.10); border:1px solid rgba(255,183,3,.22); }
+    .ev-actor.partner { color:var(--sky);   background:rgba(144,224,239,.08); border:1px solid rgba(144,224,239,.20); }
+    .ev-actor.me      { color:var(--green); background:var(--grn-s);          border:1px solid rgba(6,214,160,.22); }
+
+    .empty-history {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      padding:50px 20px; text-align:center; color:var(--td);
+    }
+    .empty-history .stub-icon { font-size:48px; opacity:.45; margin-bottom:6px; }
+  </style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>История</h2>
+      <p>Журнал всех событий системы (`events_log`). <b>Read-only</b> — нельзя редактировать или удалить, только просмотр. Это аудиторский след всего, что делает партнёр, AI и система.</p>
+    </div>
+    <div class="welcome-r"><div class="wdate">Записей: <b id="st-h-total">0</b></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">📜</div><div class="sc-trend tu" id="st-h-today-trend">+0</div></div><div class="sc-val" id="st-h-today">0</div><div class="sc-lbl">Сегодня</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">🗓</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-h-week">0</div><div class="sc-lbl">За 7 дней</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">🤖</div><div class="sc-trend tu" id="st-h-ai-trend">+0</div></div><div class="sc-val" id="st-h-ai">0</div><div class="sc-lbl">Действия AI</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">👤</div><div class="sc-trend tu" id="st-h-me-trend">+0</div></div><div class="sc-val" id="st-h-me">0</div><div class="sc-lbl">Мои действия</div></div>
+  </div>
+
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-t">📜 Журнал событий</div>
+      <div class="pnl-tabs" id="h-period">
+        <button class="pt active" data-p="all">Всё</button>
+        <button class="pt" data-p="today">Сегодня</button>
+        <button class="pt" data-p="yesterday">Вчера</button>
+        <button class="pt" data-p="7d">7 дней</button>
+        <button class="pt" data-p="30d">30 дней</button>
+      </div>
+    </div>
+    <div class="pnl-tabs" id="h-cat" style="padding:0 2px 6px">
+      <button class="pt active" data-c="all">Все типы</button>
+      <button class="pt" data-c="lead">🎯 Лиды</button>
+      <button class="pt" data-c="message">💬 Сообщения</button>
+      <button class="pt" data-c="contact">📇 Контакты</button>
+      <button class="pt" data-c="ai">🤖 AI</button>
+      <button class="pt" data-c="partner">🌊 Партнёры</button>
+      <button class="pt" data-c="task">✅ Задачи</button>
+      <button class="pt" data-c="auth">🔐 Логин</button>
+    </div>
+    <div class="pnl-tabs" id="h-actor" style="padding:0 2px 6px">
+      <button class="pt active" data-a="all">Все актёры</button>
+      <button class="pt" data-a="me">👤 Я</button>
+      <button class="pt" data-a="ai">🤖 AI</button>
+      <button class="pt" data-a="system">⚙️ Система</button>
+      <button class="pt" data-a="partner">🌊 Партнёр</button>
+    </div>
+    <div class="sch">
+      <input type="text" id="h-search" class="sch-i" placeholder="🔍 Поиск по событию, имени лида/контакта/партнёра…">
+    </div>
+    <div id="h-list"></div>
+    <div class="empty-history" id="h-empty" style="display:none">
+      <div class="stub-icon">📭</div>
+      <p>По выбранным фильтрам событий нет.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Event Detail Modal -->
+<div class="modal" id="h-modal">
+  <div class="modal-backdrop" onclick="closeEvModal()"></div>
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEvModal()">✕</button>
+    <div id="h-modal-body"></div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('history');
+
+const TODAY = new Date('2026-04-18T18:30:00');
+
+// ===== Maps =====
+const TYPE_MAP = {
+  'lead.created':         { label:'Новая заявка',          icon:'🎯', cls:'cl', cat:'lead' },
+  'lead.status_changed':  { label:'Статус заявки изменён', icon:'🔄', cls:'cs', cat:'lead' },
+  'lead.qualified':       { label:'Лид квалифицирован',    icon:'✅', cls:'cg', cat:'lead' },
+  'lead.converted':       { label:'Конверсия',             icon:'🏆', cls:'cs', cat:'lead' },
+  'lead.rejected':        { label:'Отказ от лида',         icon:'❌', cls:'cr', cat:'lead' },
+  'message.sent':         { label:'Сообщение отправлено',  icon:'💬', cls:'cl', cat:'message' },
+  'message.received':     { label:'Сообщение получено',    icon:'📩', cls:'csk',cat:'message' },
+  'ai.draft_created':     { label:'AI создал черновик',    icon:'🤖', cls:'cl', cat:'ai' },
+  'ai.message_approved':  { label:'AI-черновик одобрен',   icon:'✅', cls:'cg', cat:'ai' },
+  'ai.job_completed':     { label:'AI завершил задачу',    icon:'🎯', cls:'cl', cat:'ai' },
+  'contact.created':      { label:'Контакт добавлен',      icon:'➕', cls:'cg', cat:'contact' },
+  'contact.imported':     { label:'Импорт контактов',      icon:'📥', cls:'csk',cat:'contact' },
+  'contact.invited':      { label:'Контакт приглашён',     icon:'📨', cls:'cl', cat:'contact' },
+  'partner.joined':       { label:'Новый партнёр',         icon:'🌊', cls:'cs', cat:'partner' },
+  'partner.rank_up':      { label:'Партнёр повысил ранг', icon:'⭐', cls:'cs', cat:'partner' },
+  'task.created':         { label:'Задача создана',        icon:'📌', cls:'cl', cat:'task' },
+  'task.completed':       { label:'Задача выполнена',      icon:'✅', cls:'cg', cat:'task' },
+  'template.created':     { label:'Шаблон создан',         icon:'📋', cls:'csk',cat:'template' },
+  'auth.login':           { label:'Вход в систему',        icon:'🔐', cls:'cmu',cat:'auth' },
+};
+const ACTOR_MAP = {
+  me:      { label:'Я',       icon:'👤' },
+  ai:      { label:'AI',      icon:'🤖' },
+  system:  { label:'Система', icon:'⚙️' },
+  partner: { label:'Партнёр', icon:'🌊' },
+};
+
+// ===== MOCK EVENTS — отсортированы desc по дате =====
+const EVENTS = [
+  // Сегодня (2026-04-18)
+  { id:101, ts:'2026-04-18T18:14:00', type:'auth.login',          actor:'me',      title:'Вход в систему', desc:'Сырым вошёл в кабинет с устройства Windows 10', meta:{ ip:'95.59.x.x', device:'Chrome 142 / Windows', location:'Алматы, KZ' } },
+  { id:102, ts:'2026-04-18T16:52:00', type:'ai.draft_created',    actor:'ai',      title:'AI подготовил черновик для <b>Нурлана Баймухамбетова</b>', desc:'Первое сообщение в Instagram, шаблон «warm_intro_v2». Ожидает одобрения партнёра.', meta:{ lead_id:4, template:'warm_intro_v2', length:'214 симв.' } },
+  { id:103, ts:'2026-04-18T15:30:00', type:'task.completed',      actor:'me',      title:'Задача выполнена: «Связаться с <b>Тимуром Ахметовым</b>»', desc:'Звонок 20 минут, договорились о созвоне 22-го для презентации.', meta:{ task_id:10, duration:'20 мин' } },
+  { id:104, ts:'2026-04-18T14:08:00', type:'lead.qualified',      actor:'me',      title:'Лид квалифицирован: <b>Дана Турсынова</b>', desc:'Бюджет $200/мес, целевой круиз — Карибы. Готова к презентации.', meta:{ lead_id:3, status_from:'contacted', status_to:'qualified' } },
+  { id:105, ts:'2026-04-18T13:22:00', type:'message.sent',        actor:'me',      title:'Сообщение в WhatsApp: <b>Алия Сатпаева</b>', desc:'«Здравствуйте, Алия! Видела вашу заявку, давайте созвонимся в удобное время...»', meta:{ lead_id:1, channel:'whatsapp' } },
+  { id:106, ts:'2026-04-18T13:00:00', type:'task.created',        actor:'ai',      title:'AI создал задачу: «Перезвонить <b>Алие Сатпаевой</b>»', desc:'Высокий приоритет — лид только что оставил заявку, важен первый час.', meta:{ task_id:1, priority:'high' } },
+  { id:107, ts:'2026-04-18T09:14:00', type:'lead.created',        actor:'system',  title:'Новая заявка с лендинга: <b>Алия Сатпаева</b>', desc:'Реф-код TEST001 (Сайра), Алматы, мессенджер WhatsApp.', meta:{ lead_id:1, ref:'TEST001', source:'landing' } },
+  { id:108, ts:'2026-04-18T07:50:00', type:'lead.created',        actor:'system',  title:'Новая заявка с лендинга: <b>Асель Жумабекова</b>', desc:'Реф-код TEST001 (Сайра), Алматы, мессенджер WhatsApp.', meta:{ lead_id:7, ref:'TEST001', source:'landing' } },
+
+  // Вчера (2026-04-17)
+  { id:201, ts:'2026-04-17T20:11:00', type:'partner.joined',      actor:'system',  title:'Новый партнёр в команде: <b>Аружан Темирова</b>', desc:'Зарегистрировалась через реф-код TEST001. Линия 1, Караганда.', meta:{ partner_id:6, ref:'AT-NEW', upline:'TEST001' } },
+  { id:202, ts:'2026-04-17T18:02:00', type:'lead.created',        actor:'system',  title:'Новая заявка с лендинга: <b>Марат Кенжебаев</b>', desc:'Астана, мессенджер Telegram, имя сохранено как @marat_k.', meta:{ lead_id:2, ref:'TEST001', source:'landing' } },
+  { id:203, ts:'2026-04-17T16:45:00', type:'ai.message_approved', actor:'me',      title:'AI-черновик одобрен и отправлен <b>Жулдыз Сериккызы</b>', desc:'Партнёр отредактировал 2 предложения, добавил эмодзи, отправил.', meta:{ lead_id:null, partner_action:true } },
+  { id:204, ts:'2026-04-17T14:20:00', type:'contact.invited',     actor:'me',      title:'Приглашение отправлено контакту <b>Мария Петрова</b>', desc:'Скопирована реф-ссылка sairateam.com/?ref=TEST001 в буфер.', meta:{ contact_id:3, channel:'telegram' } },
+  { id:205, ts:'2026-04-17T12:40:00', type:'lead.created',        actor:'system',  title:'Новая заявка с лендинга: <b>Дана Турсынова</b>', desc:'Шымкент, мессенджер WhatsApp, готова к диалогу.', meta:{ lead_id:3, ref:'TEST001', source:'landing' } },
+
+  // 2 дня назад (2026-04-16)
+  { id:301, ts:'2026-04-16T21:18:00', type:'lead.created',        actor:'system',  title:'Новая заявка с лендинга: <b>Нурлан Баймухамбетов</b>', desc:'Караганда, мессенджер Instagram (@nurlan.b).', meta:{ lead_id:4, ref:'TEST001', source:'landing' } },
+  { id:302, ts:'2026-04-16T15:42:00', type:'task.completed',      actor:'me',      title:'Задача выполнена: «Связаться с <b>Тимуром</b>»', desc:'Первый контакт прошёл успешно, лид заинтересован.', meta:{ task_id:10 } },
+  { id:303, ts:'2026-04-16T14:22:00', type:'lead.qualified',      actor:'me',      title:'Лид квалифицирован: <b>Тимур Ахметов</b>', desc:'Готов к презентации, ждёт расчёт по бюджету.', meta:{ lead_id:8, status_from:'contacted', status_to:'qualified' } },
+  { id:304, ts:'2026-04-16T11:00:00', type:'contact.imported',    actor:'me',      title:'Импорт контактов: 12 строк из CSV', desc:'Файл contacts_old.csv, 10 уникальных + 2 дубля (пропущены).', meta:{ source:'csv', total:12, added:10, duplicates:2 } },
+
+  // 3 дня назад (2026-04-15)
+  { id:401, ts:'2026-04-15T11:20:00', type:'message.sent',        actor:'me',      title:'Welcome-pack отправлен <b>Елене Морозовой</b>', desc:'Конверсия закрыта, отправлены инструкции по аккаунту InCruises.', meta:{ lead_id:5, channel:'telegram' } },
+  { id:402, ts:'2026-04-15T10:55:00', type:'lead.converted',      actor:'me',      title:'🏆 Конверсия: <b>Елена Морозова</b>', desc:'Стала клиентом InCruises (план Elite). +1 к статистике, +DAB.', meta:{ lead_id:5, status_from:'qualified', status_to:'converted' } },
+
+  // 4 дня назад (2026-04-14)
+  { id:501, ts:'2026-04-14T16:33:00', type:'lead.rejected',       actor:'me',      title:'Лид отклонён: <b>Ержан Абдрахманов</b>', desc:'Не подошёл по бюджету / не заинтересован в круизах.', meta:{ lead_id:6, status_from:'contacted', status_to:'rejected' } },
+
+  // Неделю назад (2026-04-11)
+  { id:601, ts:'2026-04-11T09:00:00', type:'partner.rank_up',     actor:'system',  title:'Партнёр <b>Айдар Касенов</b> повысил ранг: MD → RD', desc:'Поздравьте! Команда выросла до 42 человек, объём 480 CV.', meta:{ partner_id:1, rank_from:'MD', rank_to:'RD' } },
+  { id:602, ts:'2026-04-11T08:30:00', type:'template.created',    actor:'me',      title:'Шаблон создан: «warm_intro_v2»', desc:'Тёплое первое сообщение для лидов из Instagram. Используется AI.', meta:{ template_name:'warm_intro_v2' } },
+
+  // 2 недели назад (2026-04-04)
+  { id:701, ts:'2026-04-04T14:00:00', type:'partner.joined',      actor:'system',  title:'Новый партнёр в команде: <b>Камила Орынбасар</b>', desc:'Линия 2 (под Айдаром Касеновым), Алматы.', meta:{ partner_id:9, upline:'AID2025' } },
+];
+
+let periodFilter = 'all';
+let catFilter = 'all';
+let actorFilter = 'all';
+let hSearch = '';
+
+// ===== helpers =====
+function inPeriod(ts, period) {
+  const d = new Date(ts);
+  const day0 = new Date(TODAY); day0.setHours(0,0,0,0);
+  if (period === 'today')     return d >= day0;
+  if (period === 'yesterday') { const day_1 = new Date(day0); day_1.setDate(day_1.getDate()-1); return d >= day_1 && d < day0; }
+  if (period === '7d')        { const d7 = new Date(day0); d7.setDate(d7.getDate()-7); return d >= d7; }
+  if (period === '30d')       { const d30 = new Date(day0); d30.setDate(d30.getDate()-30); return d >= d30; }
+  return true;
+}
+function dayLabel(ts) {
+  const d = new Date(ts);
+  const day0 = new Date(TODAY); day0.setHours(0,0,0,0);
+  const day_1 = new Date(day0); day_1.setDate(day_1.getDate()-1);
+  const day_7 = new Date(day0); day_7.setDate(day_7.getDate()-7);
+  const dStart = new Date(d); dStart.setHours(0,0,0,0);
+  if (dStart.getTime() === day0.getTime())  return 'Сегодня · ' + fmtDate(d);
+  if (dStart.getTime() === day_1.getTime()) return 'Вчера · ' + fmtDate(d);
+  if (dStart >= day_7) {
+    const wd = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'][d.getDay()];
+    return wd + ' · ' + fmtDate(d);
+  }
+  return fmtDate(d);
+}
+function dayKey(ts) { const d = new Date(ts); return d.toISOString().slice(0,10); }
+function fmtDate(d) {
+  const m = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
+}
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtFull(ts) {
+  const d = new Date(ts);
+  return `${fmtDate(d)} · ${fmtTime(ts)}`;
+}
+
+// ===== stats =====
+function updateStats() {
+  const today    = EVENTS.filter(e => inPeriod(e.ts, 'today')).length;
+  const week     = EVENTS.filter(e => inPeriod(e.ts, '7d')).length;
+  const ai       = EVENTS.filter(e => e.actor === 'ai').length;
+  const me       = EVENTS.filter(e => e.actor === 'me').length;
+  document.getElementById('st-h-total').textContent = EVENTS.length;
+  document.getElementById('st-h-today').textContent = today;
+  document.getElementById('st-h-week').textContent  = week;
+  document.getElementById('st-h-ai').textContent    = ai;
+  document.getElementById('st-h-me').textContent    = me;
+  document.getElementById('st-h-today-trend').textContent = today ? `+${today}` : '0';
+  document.getElementById('st-h-ai-trend').textContent    = ai ? `+${ai}` : '0';
+  document.getElementById('st-h-me-trend').textContent    = me ? `+${me}` : '0';
+}
+
+// ===== render =====
+function renderHistory() {
+  const list = document.getElementById('h-list');
+  const empty = document.getElementById('h-empty');
+  const q = hSearch.toLowerCase().trim();
+
+  let filtered = EVENTS.filter(e => {
+    if (!inPeriod(e.ts, periodFilter)) return false;
+    const t = TYPE_MAP[e.type];
+    if (catFilter !== 'all' && (!t || t.cat !== catFilter)) return false;
+    if (actorFilter !== 'all' && e.actor !== actorFilter) return false;
+    if (!q) return true;
+    const hay = `${e.title} ${e.desc}`.replace(/<[^>]+>/g,'').toLowerCase();
+    return hay.includes(q);
+  });
+
+  filtered.sort((a,b) => new Date(b.ts) - new Date(a.ts));
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Группировка по дню
+  const groups = {};
+  filtered.forEach(e => {
+    const k = dayKey(e.ts);
+    if (!groups[k]) groups[k] = { label: dayLabel(e.ts), items:[] };
+    groups[k].items.push(e);
+  });
+
+  let html = '';
+  Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(k => {
+    const g = groups[k];
+    html += `
+      <div class="h-day-hdr">
+        <div class="h-day-ttl">${g.label}</div>
+        <div class="h-day-cnt">${g.items.length}</div>
+        <div class="h-day-line"></div>
+      </div>`;
+    html += g.items.map(e => {
+      const t = TYPE_MAP[e.type] || { icon:'📌', cls:'cmu', label:e.type };
+      const a = ACTOR_MAP[e.actor];
+      return `
+        <div class="ev" onclick="openEvModal(${e.id})">
+          <div class="ev-time">${fmtTime(e.ts)}</div>
+          <div class="ev-icon ${t.cls}">${t.icon}</div>
+          <div class="ev-b">
+            <div class="ev-t">${e.title}</div>
+            <div class="ev-m">
+              <span class="ev-actor ${e.actor}">${a.icon} ${a.label}</span>
+              <span>${t.label}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  });
+
+  list.innerHTML = html;
+}
+
+// ===== filters =====
+document.getElementById('h-period').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#h-period .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); periodFilter = btn.dataset.p; renderHistory();
+});
+document.getElementById('h-cat').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#h-cat .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); catFilter = btn.dataset.c; renderHistory();
+});
+document.getElementById('h-actor').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#h-actor .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); actorFilter = btn.dataset.a; renderHistory();
+});
+document.getElementById('h-search').addEventListener('input', e => { hSearch = e.target.value; renderHistory(); });
+
+// ===== modal =====
+function openEvModal(id) {
+  const e = EVENTS.find(x => x.id === id);
+  if (!e) return;
+  const t = TYPE_MAP[e.type] || { icon:'📌', cls:'cmu', label:e.type };
+  const a = ACTOR_MAP[e.actor];
+  const metaRows = e.meta ? Object.entries(e.meta).map(([k,v]) => `
+    <div class="mg-row"><span class="mg-k">${k}</span><span class="mg-v" style="font-family:'JetBrains Mono',monospace;font-size:12px">${v === null ? '—' : v}</span></div>
+  `).join('') : '';
+  const body = document.getElementById('h-modal-body');
+  body.innerHTML = `
+    <div class="modal-head">
+      <div class="ev-icon ${t.cls}" style="width:44px;height:44px;border-radius:12px;font-size:18px">${t.icon}</div>
+      <div>
+        <div class="modal-ttl">${t.label}</div>
+        <div class="modal-sub">${fmtFull(e.ts)} · ID #${e.id}</div>
+      </div>
+      <div class="ev-actor ${e.actor}" style="margin-left:auto">${a.icon} ${a.label}</div>
+    </div>
+    <div class="modal-grid">
+      <div class="mg-row" style="display:block">
+        <div class="mg-k" style="margin-bottom:6px">📝 Событие</div>
+        <div class="mg-v" style="text-align:left;font-weight:500;line-height:1.45">${e.title}</div>
+      </div>
+      <div class="mg-row" style="display:block">
+        <div class="mg-k" style="margin-bottom:6px">📄 Описание</div>
+        <div class="mg-v" style="text-align:left;font-weight:500;line-height:1.45;color:var(--tm)">${e.desc || '—'}</div>
+      </div>
+      ${metaRows ? `
+        <div class="mg-row" style="display:block">
+          <div class="mg-k" style="margin-bottom:6px">🔧 Технические данные</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${metaRows}</div>
+        </div>
+      ` : ''}
+    </div>
+    <div style="font-size:11px;color:var(--td);text-align:center;padding:6px 0 2px">
+      🔒 Read-only запись из <code style="color:var(--azure)">events_log</code>. Удаление и редактирование запрещены.
+    </div>
+  `;
+  document.getElementById('h-modal').classList.add('active');
+}
+function closeEvModal() { document.getElementById('h-modal').classList.remove('active'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEvModal(); });
+
+updateStats();
+renderHistory();
+</script>
+</body>
+</html>

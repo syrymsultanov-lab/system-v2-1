@@ -15,12 +15,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # Медиафайлы (большие)
-landing/assets/video/*.mp4
-landing/assets/video/*.mov
-landing/assets/images/*.jpg
-landing/assets/images/*.jpeg
-landing/assets/images/*.png
-landing/assets/images/*.webp
+assets/video/*.mp4
+assets/video/*.mov
+assets/images/*.jpg
+assets/images/*.jpeg
+assets/images/*.png
+assets/images/*.webp
 
 # OS
 .DS_Store

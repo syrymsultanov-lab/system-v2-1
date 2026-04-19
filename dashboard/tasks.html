@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Задачи — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    .task-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:3px; }
+    .task-due {
+      font-size:11px; font-weight:700; padding:2px 8px; border-radius:7px;
+      color:var(--td); background:var(--gl); border:1px solid var(--brd);
+      font-family:'JetBrains Mono',monospace;
+    }
+    .task-due.overdue { color:var(--coral); background:rgba(255,107,107,.10); border-color:rgba(255,107,107,.25); }
+    .task-due.today   { color:var(--sun);   background:rgba(255,183,3,.12);   border-color:rgba(255,183,3,.28); }
+    .task-due.tomorrow{ color:var(--azure); background:rgba(0,180,216,.10);   border-color:rgba(0,180,216,.25); }
+    .task-due.done    { color:var(--green); background:var(--grn-s);          border-color:rgba(6,214,160,.25); text-decoration:line-through; }
+    .task-src {
+      font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px;
+      color:var(--td); background:var(--gl); border:1px solid var(--brd);
+    }
+    .task-src.ai      { color:var(--azure); background:rgba(0,180,216,.10); border-color:rgba(0,180,216,.25); }
+    .task-src.partner { color:var(--sky);   background:rgba(144,224,239,.10); border-color:rgba(144,224,239,.25); }
+    .task-src.system  { color:var(--sun);   background:rgba(255,183,3,.10);  border-color:rgba(255,183,3,.25); }
+    .task-link {
+      font-size:11px; color:var(--azure); font-weight:600;
+      text-decoration:none; padding:2px 7px; border-radius:6px;
+      background:rgba(0,180,216,.06); border:1px solid var(--brd);
+    }
+    .task-link:hover { background:rgba(0,180,216,.14); }
+    .ti.task-done { opacity:.55; }
+    .ti.task-done .ti-t { text-decoration:line-through; color:var(--td); }
+    .pri-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .pri-h { background:var(--coral); box-shadow:0 0 8px rgba(255,107,107,.5); }
+    .pri-m { background:var(--sun); }
+    .pri-l { background:var(--td); }
+    .qa-row {
+      display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;
+    }
+    .qa-row .mbtn { padding:7px 10px; font-size:11px; flex:none; }
+  </style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>Задачи</h2>
+      <p>To-do партнёра. Что-то создаёт <b>AI</b> по событиям лидов, что-то — <b>система</b> по календарю, что-то — <b>вы вручную</b>. Просрочки подсвечены.</p>
+    </div>
+    <div class="welcome-r"><div class="wdate">Сегодня: <b id="t-today-date">—</b></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">📅</div><div class="sc-trend tu" id="st-today-trend">—</div></div><div class="sc-val" id="st-today">0</div><div class="sc-lbl">На сегодня</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">🗓</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-week">0</div><div class="sc-lbl">На неделе</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">⚠️</div><div class="sc-trend tw" id="st-over-trend">—</div></div><div class="sc-val" id="st-over">0</div><div class="sc-lbl">Просрочено</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">✅</div><div class="sc-trend tu" id="st-done-trend">—</div></div><div class="sc-val" id="st-done">0</div><div class="sc-lbl">Выполнено</div></div>
+  </div>
+
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-t">📋 Список задач</div>
+      <div class="pnl-tabs">
+        <button class="mbtn mbtn-p" onclick="openAddTask()" style="flex:none;padding:7px 12px;font-size:12px">➕ Новая задача</button>
+      </div>
+    </div>
+
+    <div class="pnl-tabs" id="t-filter-when" style="padding:0 2px 4px">
+      <button class="pt active" data-w="all">Все</button>
+      <button class="pt" data-w="overdue">⚠️ Просрочено</button>
+      <button class="pt" data-w="today">📅 Сегодня</button>
+      <button class="pt" data-w="tomorrow">➡️ Завтра</button>
+      <button class="pt" data-w="week">🗓 На неделе</button>
+      <button class="pt" data-w="done">✅ Выполнено</button>
+    </div>
+    <div class="pnl-tabs" id="t-filter-src" style="padding:0 2px 6px">
+      <button class="pt active" data-s="all">Все источники</button>
+      <button class="pt" data-s="ai">🤖 AI</button>
+      <button class="pt" data-s="partner">👤 Я</button>
+      <button class="pt" data-s="system">⚙️ Система</button>
+    </div>
+
+    <div class="sch">
+      <input type="text" id="t-search" class="sch-i" placeholder="🔍 Поиск по названию, описанию, имени лида/контакта…">
+    </div>
+    <div class="tl" id="t-list"></div>
+    <div class="leads-empty" id="t-empty" style="display:none">
+      <div class="stub-icon">📭</div>
+      <p>По выбранным фильтрам задач нет.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Task Detail Modal -->
+<div class="modal" id="t-modal">
+  <div class="modal-backdrop" onclick="closeTaskModal()"></div>
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeTaskModal()">✕</button>
+    <div id="t-modal-body"></div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('tasks');
+
+// ===== Сегодня (фиксированный day-cursor для предсказуемых mock-сроков) =====
+const TODAY = new Date('2026-04-18T00:00:00');
+function fmtDateBadge(d) {
+  const m = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  return `${d.getDate()} ${m[d.getMonth()]}`;
+}
+document.getElementById('t-today-date').textContent = fmtDateBadge(TODAY);
+
+const SRC_MAP = {
+  ai:      { label:'AI',      icon:'🤖' },
+  partner: { label:'Я',       icon:'👤' },
+  system:  { label:'Система', icon:'⚙️' },
+};
+const TYPE_MAP = {
+  call:      { label:'Звонок',     icon:'📞' },
+  message:   { label:'Сообщение',  icon:'💬' },
+  followup:  { label:'Follow-up',  icon:'🔁' },
+  meeting:   { label:'Встреча',    icon:'🤝' },
+  general:   { label:'Задача',     icon:'📌' },
+  reminder:  { label:'Напоминание',icon:'🔔' },
+};
+const PRI_MAP = {
+  high:   { label:'Высокий',  cls:'pri-h' },
+  medium: { label:'Средний',  cls:'pri-m' },
+  low:    { label:'Низкий',   cls:'pri-l' },
+};
+
+// ===== MOCK TASKS =====
+// due — ISO datetime (или null для done без срока)
+const TASKS = [
+  { id:1,  title:'Перезвонить Алие Сатпаевой',           desc:'Лид только что оставил заявку. Первый контакт в течение часа повышает конверсию в 2 раза.',
+    type:'call',     priority:'high',   source:'ai',      status:'pending', due:'2026-04-18T13:00:00', related:{ kind:'lead',    id:1, name:'Алия Сатпаева' } },
+  { id:2,  title:'Follow-up Марату Кенжебаеву',          desc:'Прошло 36 часов после первого сообщения, ответа нет. AI подготовил черновик напоминания.',
+    type:'followup', priority:'medium', source:'ai',      status:'pending', due:'2026-04-17T18:00:00', related:{ kind:'lead',    id:2, name:'Марат Кенжебаев' } },
+  { id:3,  title:'Отправить презентацию Дане',           desc:'Лид прошёл квалификацию, ждёт PDF-презентацию InCruises и расчёт по её бюджету.',
+    type:'message',  priority:'high',   source:'partner', status:'pending', due:'2026-04-18T20:00:00', related:{ kind:'lead',    id:3, name:'Дана Турсынова' } },
+  { id:4,  title:'День рождения у Айгерим',              desc:'Поздравить сестру. Хороший повод напомнить про InCruises без давления.',
+    type:'reminder', priority:'medium', source:'system',  status:'pending', due:'2026-04-19T09:00:00', related:{ kind:'contact', id:1, name:'Айгерим Сулейменова' } },
+  { id:5,  title:'AI-приглашение Бауржану',              desc:'AI готов сформировать персональное приглашение для контакта из «Друзей». Нужна ваша апрув на отправку.',
+    type:'message',  priority:'low',    source:'ai',      status:'pending', due:'2026-04-21T12:00:00', related:{ kind:'contact', id:2, name:'Бауржан Омаров' } },
+  { id:6,  title:'Подготовить план звонков на пятницу',  desc:'Сформировать список из 10 контактов категории «Знакомые» для холодного обзвона.',
+    type:'general',  priority:'medium', source:'partner', status:'pending', due:'2026-04-24T10:00:00', related:null },
+  { id:7,  title:'Написать Нурлану',                     desc:'Лид написал в Instagram, ждёт ответ. AI подготовил черновик первого сообщения.',
+    type:'message',  priority:'medium', source:'ai',      status:'pending', due:'2026-04-18T16:00:00', related:{ kind:'lead',    id:4, name:'Нурлан Баймухамбетов' } },
+  { id:8,  title:'Проверить отчёт по команде за неделю', desc:'Свериться по KPI: лиды, конверсии, активность партнёров второй линии.',
+    type:'general',  priority:'low',    source:'partner', status:'pending', due:'2026-04-23T18:00:00', related:null },
+  { id:9,  title:'Напомнить Сауле про круиз',            desc:'Клиентка ходила в круиз 2025, можно предложить апгрейд до Elite + реферальный план.',
+    type:'followup', priority:'medium', source:'system',  status:'pending', due:'2026-04-22T14:00:00', related:{ kind:'contact', id:5, name:'Сауле Исмагулова' } },
+  { id:10, title:'Связаться с Тимуром Ахметовым',        desc:'Квалифицированный лид. Завершён первый звонок, договорились о созвоне 16-го.',
+    type:'call',     priority:'high',   source:'ai',      status:'done',    due:'2026-04-16T15:00:00', completed_at:'2026-04-16T15:42:00', related:{ kind:'lead', id:8, name:'Тимур Ахметов' } },
+  { id:11, title:'Отправить материалы Елене Морозовой',  desc:'Конверсия закрыта, отправить welcome-pack и инструкцию по аккаунту.',
+    type:'message',  priority:'medium', source:'partner', status:'done',    due:'2026-04-15T11:00:00', completed_at:'2026-04-15T11:20:00', related:{ kind:'lead', id:5, name:'Елена Морозова' } },
+];
+
+let whenFilter = 'all';
+let srcFilter = 'all';
+let tSearch = '';
+
+// ===== helpers =====
+function dueBucket(t) {
+  if (t.status === 'done') return 'done';
+  if (!t.due) return 'week';
+  const d = new Date(t.due);
+  const day0 = new Date(TODAY); day0.setHours(0,0,0,0);
+  const day1 = new Date(day0); day1.setDate(day1.getDate()+1);
+  const day2 = new Date(day0); day2.setDate(day2.getDate()+2);
+  const day7 = new Date(day0); day7.setDate(day7.getDate()+7);
+  if (d < day0) return 'overdue';
+  if (d < day1) return 'today';
+  if (d < day2) return 'tomorrow';
+  if (d < day7) return 'week';
+  return 'later';
+}
+function dueBadgeText(t) {
+  if (t.status === 'done') return '✓ ' + (t.completed_at ? fmtShort(t.completed_at) : 'выполнено');
+  if (!t.due) return 'без срока';
+  const b = dueBucket(t);
+  if (b === 'today')    return 'Сегодня · ' + fmtTime(t.due);
+  if (b === 'tomorrow') return 'Завтра · ' + fmtTime(t.due);
+  if (b === 'overdue')  return 'Просрочено · ' + fmtShort(t.due);
+  return fmtShort(t.due);
+}
+function dueBadgeClass(t) {
+  const b = dueBucket(t);
+  if (b === 'overdue') return 'overdue';
+  if (b === 'today')   return 'today';
+  if (b === 'tomorrow')return 'tomorrow';
+  if (b === 'done')    return 'done';
+  return '';
+}
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtShort(iso) {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${fmtTime(iso)}`;
+}
+
+// ===== stats =====
+function updateStats() {
+  const today    = TASKS.filter(t => t.status==='pending' && dueBucket(t)==='today').length;
+  const week     = TASKS.filter(t => t.status==='pending' && ['today','tomorrow','week'].includes(dueBucket(t))).length;
+  const overdue  = TASKS.filter(t => t.status==='pending' && dueBucket(t)==='overdue').length;
+  const done     = TASKS.filter(t => t.status==='done').length;
+  document.getElementById('st-today').textContent = today;
+  document.getElementById('st-week').textContent  = week;
+  document.getElementById('st-over').textContent  = overdue;
+  document.getElementById('st-done').textContent  = done;
+  document.getElementById('st-today-trend').textContent = today ? `+${today}` : '0';
+  document.getElementById('st-over-trend').textContent  = overdue ? `!${overdue}` : '0';
+  document.getElementById('st-done-trend').textContent  = done ? `+${done}` : '0';
+}
+
+// ===== render =====
+function renderTasks() {
+  const list = document.getElementById('t-list');
+  const empty = document.getElementById('t-empty');
+  const q = tSearch.toLowerCase().trim();
+
+  let filtered = TASKS.filter(t => {
+    const b = dueBucket(t);
+    if (whenFilter === 'done')      { if (t.status !== 'done') return false; }
+    else if (whenFilter !== 'all')  { if (t.status === 'done' || b !== whenFilter) return false; }
+    else                            { /* all: всё */ }
+    if (srcFilter !== 'all' && t.source !== srcFilter) return false;
+    if (!q) return true;
+    const rel = t.related?.name || '';
+    const hay = `${t.title} ${t.desc} ${rel}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  // Сортировка: сперва просрочка, потом по дате возрастания, выполненные — в конец по completed_at desc
+  filtered.sort((a,b) => {
+    if (a.status === 'done' && b.status !== 'done') return 1;
+    if (b.status === 'done' && a.status !== 'done') return -1;
+    if (a.status === 'done' && b.status === 'done') return new Date(b.completed_at||0) - new Date(a.completed_at||0);
+    return new Date(a.due) - new Date(b.due);
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(t => {
+    const src = SRC_MAP[t.source];
+    const tp  = TYPE_MAP[t.type] || TYPE_MAP.general;
+    const pri = PRI_MAP[t.priority] || PRI_MAP.medium;
+    const dueCls = dueBadgeClass(t);
+    const dueTx  = dueBadgeText(t);
+    const relTx  = t.related ? `<span class="task-link">${t.related.kind==='lead'?'🎯':'📇'} ${t.related.name}</span>` : '';
+    return `
+      <div class="ti lead-ti ${t.status==='done'?'task-done':''}" onclick="openTaskModal(${t.id})">
+        <div class="pri-dot ${pri.cls}" title="Приоритет: ${pri.label}"></div>
+        <div class="ti-b">
+          <div class="ti-t">${tp.icon} ${t.title}</div>
+          <div class="task-meta">
+            <span class="task-due ${dueCls}">${dueTx}</span>
+            <span class="task-src ${t.source}">${src.icon} ${src.label}</span>
+            ${relTx}
+          </div>
+        </div>
+        ${t.status==='done'
+          ? '<div class="tg tg3">✓ Готово</div>'
+          : `<button class="mbtn mbtn-g" style="flex:none;padding:7px 11px;font-size:11px" onclick="event.stopPropagation();markDone(${t.id})">✓ Готово</button>`
+        }
+      </div>`;
+  }).join('');
+}
+
+// ===== filters =====
+document.getElementById('t-filter-when').addEventListener('click', e => {
+  const btn = e.target.closest('.pt');
+  if (!btn) return;
+  document.querySelectorAll('#t-filter-when .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  whenFilter = btn.dataset.w;
+  renderTasks();
+});
+document.getElementById('t-filter-src').addEventListener('click', e => {
+  const btn = e.target.closest('.pt');
+  if (!btn) return;
+  document.querySelectorAll('#t-filter-src .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  srcFilter = btn.dataset.s;
+  renderTasks();
+});
+document.getElementById('t-search').addEventListener('input', e => { tSearch = e.target.value; renderTasks(); });
+
+// ===== modal =====
+function openTaskModal(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  const src = SRC_MAP[t.source];
+  const tp  = TYPE_MAP[t.type] || TYPE_MAP.general;
+  const pri = PRI_MAP[t.priority] || PRI_MAP.medium;
+  const dueCls = dueBadgeClass(t);
+  const dueTx  = dueBadgeText(t);
+  const body = document.getElementById('t-modal-body');
+  const relRow = t.related
+    ? `<div class="mg-row"><span class="mg-k">🔗 Связано с</span><a class="mg-v" href="${t.related.kind==='lead'?'leads.html':'contacts.html'}">${t.related.kind==='lead'?'🎯':'📇'} ${t.related.name}</a></div>`
+    : '';
+  const completedRow = t.status==='done'
+    ? `<div class="mg-row"><span class="mg-k">✓ Выполнено</span><span class="mg-v">${t.completed_at ? fmtShort(t.completed_at) : '—'}</span></div>`
+    : '';
+  body.innerHTML = `
+    <div class="modal-head">
+      <div class="la lead-ava">${tp.icon}</div>
+      <div>
+        <div class="modal-ttl">${t.title}</div>
+        <div class="modal-sub">${tp.label} · приоритет: ${pri.label} · источник: ${src.icon} ${src.label}</div>
+      </div>
+      <div class="task-due ${dueCls}" style="margin-left:auto">${dueTx}</div>
+    </div>
+    <div class="modal-grid">
+      <div class="mg-row" style="display:block">
+        <div class="mg-k" style="margin-bottom:6px">📝 Описание</div>
+        <div class="mg-v" style="text-align:left;font-weight:500;line-height:1.45">${t.desc || '—'}</div>
+      </div>
+      ${relRow}
+      <div class="mg-row"><span class="mg-k">🕐 Срок</span><span class="mg-v">${t.due ? fmtShort(t.due) : 'без срока'}</span></div>
+      ${completedRow}
+    </div>
+    ${t.status === 'done' ? `
+      <div class="modal-actions">
+        <button class="mbtn mbtn-p" onclick="reopenTask(${t.id})">↩️ Вернуть в работу</button>
+        <button class="mbtn mbtn-r" onclick="deleteTask(${t.id})">🗑 Удалить</button>
+      </div>
+    ` : `
+      <div class="modal-actions">
+        <button class="mbtn mbtn-g" onclick="markDone(${t.id})">✅ Выполнено</button>
+        <button class="mbtn mbtn-p" onclick="editTask(${t.id})">✏️ Редактировать</button>
+        <button class="mbtn mbtn-r" onclick="deleteTask(${t.id})">🗑 Удалить</button>
+      </div>
+      <div class="qa-row">
+        <span style="font-size:11px;color:var(--td);align-self:center;margin-right:4px">🕐 Отложить:</span>
+        <button class="mbtn" onclick="snooze(${t.id},'1h')">+1ч</button>
+        <button class="mbtn" onclick="snooze(${t.id},'3h')">+3ч</button>
+        <button class="mbtn" onclick="snooze(${t.id},'tomorrow')">На завтра</button>
+        <button class="mbtn" onclick="snooze(${t.id},'+1d')">+1 день</button>
+        <button class="mbtn" onclick="snooze(${t.id},'+1w')">+1 неделя</button>
+      </div>
+    `}
+  `;
+  document.getElementById('t-modal').classList.add('active');
+}
+function closeTaskModal() { document.getElementById('t-modal').classList.remove('active'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTaskModal(); });
+
+// ===== actions =====
+function showToast(msg) {
+  let el = document.getElementById('app-toast');
+  if (!el) { el = document.createElement('div'); el.id='app-toast'; el.className='toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => el.classList.remove('show'), 2800);
+}
+function markDone(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  t.status = 'done';
+  t.completed_at = new Date().toISOString();
+  closeTaskModal();
+  renderTasks(); updateStats();
+  showToast(`✅ Задача выполнена: ${t.title}`);
+}
+function reopenTask(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  t.status = 'pending';
+  delete t.completed_at;
+  renderTasks(); updateStats();
+  openTaskModal(id);
+  showToast(`↩️ Задача возвращена в работу`);
+}
+function snooze(id, mode) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  const now = new Date();
+  let d = t.due ? new Date(t.due) : now;
+  // Если уже просрочено — отсчёт от сейчас, иначе от текущего срока
+  if (d < now) d = now;
+  if      (mode === '1h')       d.setHours(d.getHours()+1);
+  else if (mode === '3h')       d.setHours(d.getHours()+3);
+  else if (mode === 'tomorrow') { d = new Date(TODAY); d.setDate(d.getDate()+1); d.setHours(9,0,0,0); }
+  else if (mode === '+1d')      d.setDate(d.getDate()+1);
+  else if (mode === '+1w')      d.setDate(d.getDate()+7);
+  t.due = d.toISOString();
+  renderTasks(); updateStats();
+  openTaskModal(id);
+  showToast(`🕐 Отложено до ${fmtShort(t.due)}`);
+}
+function deleteTask(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm(`Удалить задачу "${t.title}"?`)) return;
+  const idx = TASKS.findIndex(x => x.id === id);
+  TASKS.splice(idx, 1);
+  closeTaskModal();
+  renderTasks(); updateStats();
+  showToast('🗑 Задача удалена');
+}
+function editTask(id) { showToast('✏️ Форма редактирования появится в следующей итерации.'); }
+function openAddTask()  { showToast('➕ Форма добавления задачи появится после миграции таблицы ai_jobs.'); }
+
+updateStats();
+renderTasks();
+</script>
+</body>
+</html>

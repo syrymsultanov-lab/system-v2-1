@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Контакты — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>Контакты</h2>
+      <p>Личная телефонная книга партнёра. Импорт из CSV / VCF / Google. <b>Это не лиды</b> — лиды приходят только через форму лендинга.</p>
+    </div>
+    <div class="welcome-r">
+      <div class="wdate">Всего: <b id="cn-total">0</b></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">👥</div><div class="sc-trend tu">+5</div></div><div class="sc-val" id="st-all">0</div><div class="sc-lbl">Контактов всего</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">🟢</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-wa">0</div><div class="sc-lbl">WhatsApp</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">✈️</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-tg">0</div><div class="sc-lbl">Telegram</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">📨</div><div class="sc-trend tu">+2</div></div><div class="sc-val" id="st-inv">0</div><div class="sc-lbl">Приглашены</div></div>
+  </div>
+
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-t">📇 Телефонная книга</div>
+      <div class="pnl-tabs">
+        <button class="mbtn mbtn-p" onclick="openAddContact()" style="flex:none;padding:7px 12px;font-size:12px">➕ Добавить</button>
+        <button class="mbtn mbtn-ai" onclick="openImport()" style="flex:none;padding:7px 12px;font-size:12px">📥 Импорт</button>
+      </div>
+    </div>
+    <div class="pnl-tabs" id="cn-tags" style="padding:0 2px 4px">
+      <button class="pt active" data-t="all">Все</button>
+      <button class="pt" data-t="family">👨‍👩‍👧 Семья</button>
+      <button class="pt" data-t="friend">🤝 Друзья</button>
+      <button class="pt" data-t="work">💼 Работа</button>
+      <button class="pt" data-t="client">⭐ Клиенты</button>
+      <button class="pt" data-t="acquaintance">👋 Знакомые</button>
+      <button class="pt" data-t="invited">📨 Приглашены</button>
+    </div>
+    <div class="sch">
+      <input type="text" id="cn-search" class="sch-i" placeholder="🔍 Поиск по имени, телефону, мессенджеру, тегу…">
+    </div>
+    <div class="tl" id="cn-list"></div>
+    <div class="leads-empty" id="cn-empty" style="display:none">
+      <div class="stub-icon">📭</div>
+      <p>По выбранным фильтрам контактов нет.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Contact Modal -->
+<div class="modal" id="cn-modal">
+  <div class="modal-backdrop" onclick="closeCnModal()"></div>
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeCnModal()">✕</button>
+    <div id="cn-modal-body"></div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('contacts');
+
+const MY_REF = 'TEST001';
+
+const TAG_MAP = {
+  family:       { label:'Семья',    icon:'👨‍👩‍👧', tg:'tg1' },
+  friend:       { label:'Друзья',   icon:'🤝',      tg:'tg3' },
+  work:         { label:'Работа',   icon:'💼',      tg:'tg2' },
+  client:       { label:'Клиент',   icon:'⭐',      tg:'tg-g' },
+  acquaintance: { label:'Знакомые', icon:'👋',      tg:'tg1' },
+};
+
+const MSG_MAP = {
+  whatsapp:  { label:'WhatsApp',  icon:'🟢' },
+  telegram:  { label:'Telegram',  icon:'✈️' },
+  instagram: { label:'Instagram', icon:'📷' },
+  viber:     { label:'Viber',     icon:'🟣' },
+  email:     { label:'Email',     icon:'✉️' },
+};
+
+const CONTACTS = [
+  { id:1, name:'Айгерим',   last_name:'Сулейменова', phone:'+7 701 222 3344', email:'aigerim.s@mail.ru',     messenger:'whatsapp', messenger_handle:'+77012223344', tag:'family',       invited:true,  notes:'Сестра, Алматы',        source:'manual', created_at:'2026-03-12' },
+  { id:2, name:'Бауржан',   last_name:'Омаров',      phone:'+7 705 111 4455', email:'baurzhan.o@gmail.com',  messenger:'telegram', messenger_handle:'@bau_omarov',  tag:'friend',       invited:false, notes:'Универ, группа 2010',   source:'google', created_at:'2026-02-20' },
+  { id:3, name:'Мария',     last_name:'Петрова',     phone:'+7 903 556 7788', email:'m.petrova@yandex.ru',   messenger:'telegram', messenger_handle:'@masha_p',     tag:'work',         invited:true,  notes:'Бывшая коллега',        source:'csv',    created_at:'2026-01-15' },
+  { id:4, name:'Азамат',    last_name:'Кусаинов',    phone:'+7 747 993 1010', email:'azamat.k@inbox.ru',     messenger:'whatsapp', messenger_handle:'+77479931010', tag:'friend',       invited:false, notes:'Школа №24, Актобе',     source:'vcf',    created_at:'2026-01-05' },
+  { id:5, name:'Сауле',     last_name:'Исмагулова',  phone:'+7 702 445 8899', email:'saule.ismagul@mail.ru', messenger:'instagram',messenger_handle:'@saule_is',    tag:'client',       invited:true,  notes:'Круиз 2025, довольна',  source:'manual',created_at:'2025-12-18' },
+  { id:6, name:'Ринат',     last_name:'Токтаров',    phone:'+7 778 332 7700', email:'rinat.t@gmail.com',     messenger:'telegram', messenger_handle:'@rinat_t',     tag:'acquaintance', invited:false, notes:'Фитнес, знакомый',      source:'manual',created_at:'2026-04-02' },
+  { id:7, name:'Гульнара',  last_name:'Нуртасова',   phone:'+7 707 119 2266', email:'gulnara.n@mail.ru',     messenger:'whatsapp', messenger_handle:'+77071192266', tag:'family',       invited:false, notes:'Тётя, Шымкент',         source:'manual',created_at:'2026-03-28' },
+  { id:8, name:'Данияр',    last_name:'Альжанов',    phone:'+7 701 667 4422', email:'daniyar.a@yandex.kz',   messenger:'viber',    messenger_handle:'+77016674422', tag:'work',         invited:true,  notes:'Партнёр по работе',     source:'google',created_at:'2025-11-10' },
+];
+
+let tagFilter = 'all';
+let cnSearch = '';
+
+function updateStats() {
+  const total = CONTACTS.length;
+  document.getElementById('cn-total').textContent = total;
+  document.getElementById('st-all').textContent = total;
+  document.getElementById('st-wa').textContent = CONTACTS.filter(c => c.messenger === 'whatsapp').length;
+  document.getElementById('st-tg').textContent = CONTACTS.filter(c => c.messenger === 'telegram').length;
+  document.getElementById('st-inv').textContent = CONTACTS.filter(c => c.invited).length;
+}
+
+function renderContacts() {
+  const list = document.getElementById('cn-list');
+  const empty = document.getElementById('cn-empty');
+  const q = cnSearch.toLowerCase().trim();
+
+  const filtered = CONTACTS.filter(c => {
+    if (tagFilter === 'invited') { if (!c.invited) return false; }
+    else if (tagFilter !== 'all' && c.tag !== tagFilter) return false;
+    if (!q) return true;
+    const tg = TAG_MAP[c.tag]?.label || '';
+    const hay = `${c.name} ${c.last_name} ${c.phone} ${c.email} ${c.messenger_handle} ${tg} ${c.notes}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(c => {
+    const t = TAG_MAP[c.tag] || { label:c.tag, icon:'🏷', tg:'tg1' };
+    const m = MSG_MAP[c.messenger] || { label:c.messenger, icon:'💬' };
+    const invIcon = c.invited ? '<span class="cn-inv" title="Приглашение отправлено">📨</span>' : '';
+    return `
+      <div class="ti lead-ti" onclick="openCnModal(${c.id})">
+        <div class="la lead-ava" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,var(--ocean),var(--azure))">${c.name[0]}${c.last_name[0]}</div>
+        <div class="ti-b">
+          <div class="ti-t">${c.name} ${c.last_name} ${invIcon}</div>
+          <div class="ti-m">${m.icon} ${c.messenger_handle} · ${c.phone}</div>
+        </div>
+        <div class="tg ${t.tg}">${t.icon} ${t.label}</div>
+      </div>`;
+  }).join('');
+}
+
+document.getElementById('cn-tags').addEventListener('click', e => {
+  const btn = e.target.closest('.pt');
+  if (!btn) return;
+  document.querySelectorAll('#cn-tags .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tagFilter = btn.dataset.t;
+  renderContacts();
+});
+document.getElementById('cn-search').addEventListener('input', e => { cnSearch = e.target.value; renderContacts(); });
+
+function openCnModal(id) {
+  const c = CONTACTS.find(x => x.id === id);
+  if (!c) return;
+  const t = TAG_MAP[c.tag] || { label:c.tag, icon:'🏷', tg:'tg1' };
+  const m = MSG_MAP[c.messenger] || { label:c.messenger, icon:'💬' };
+  const srcMap = { manual:'Вручную', csv:'CSV импорт', vcf:'VCF (vCard)', google:'Google Contacts' };
+  const body = document.getElementById('cn-modal-body');
+  body.innerHTML = `
+    <div class="modal-head">
+      <div class="la lead-ava">${c.name[0]}${c.last_name[0]}</div>
+      <div>
+        <div class="modal-ttl">${c.name} ${c.last_name}</div>
+        <div class="modal-sub">${c.notes || '—'}</div>
+      </div>
+      <div class="tg ${t.tg}" style="margin-left:auto">${t.icon} ${t.label}</div>
+    </div>
+    <div class="modal-grid">
+      <div class="mg-row"><span class="mg-k">📱 Телефон</span><a class="mg-v" href="tel:${c.phone}">${c.phone}</a></div>
+      <div class="mg-row"><span class="mg-k">✉️ Email</span><a class="mg-v" href="mailto:${c.email}">${c.email}</a></div>
+      <div class="mg-row"><span class="mg-k">${m.icon} Мессенджер</span><span class="mg-v">${m.label} — ${c.messenger_handle}</span></div>
+      <div class="mg-row"><span class="mg-k">📥 Источник</span><span class="mg-v">${srcMap[c.source] || c.source}</span></div>
+      <div class="mg-row"><span class="mg-k">📨 Приглашён</span><span class="mg-v">${c.invited ? 'Да' : 'Нет'}</span></div>
+      <div class="mg-row"><span class="mg-k">📅 Добавлен</span><span class="mg-v">${c.created_at}</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-p" onclick="inviteContact(${c.id})">📨 Пригласить</button>
+      <button class="mbtn mbtn-ai" onclick="aiInvite(${c.id})">🤖 AI-приглашение</button>
+      <button class="mbtn mbtn-msg" onclick="contactMessenger(${c.id})">${m.icon} Связаться</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px">
+      <button class="mbtn mbtn-g" onclick="editContact(${c.id})">✏️ Редактировать</button>
+      <button class="mbtn mbtn-r" onclick="deleteContact(${c.id})">🗑 Удалить</button>
+    </div>
+  `;
+  document.getElementById('cn-modal').classList.add('active');
+}
+function closeCnModal() { document.getElementById('cn-modal').classList.remove('active'); }
+
+function showToast(msg) {
+  let t = document.getElementById('app-toast');
+  if (!t) { t = document.createElement('div'); t.id='app-toast'; t.className='toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function inviteContact(id) {
+  const c = CONTACTS.find(x => x.id === id);
+  if (!c) return;
+  const link = `https://sairateam.com/?ref=${MY_REF}`;
+  if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+  c.invited = true;
+  renderContacts(); updateStats();
+  openCnModal(id);
+  showToast(`📨 Реф-ссылка скопирована: ${link}`);
+}
+
+function aiInvite(id) {
+  const c = CONTACTS.find(x => x.id === id);
+  if (!c) return;
+  showToast(`🤖 AI готовит персональное приглашение для ${c.name}. Черновик появится на одобрение.`);
+}
+
+function contactMessenger(id) {
+  const c = CONTACTS.find(x => x.id === id);
+  if (!c) return;
+  let url = '';
+  if (c.messenger === 'whatsapp') url = `https://wa.me/${c.messenger_handle.replace(/\D/g,'')}`;
+  else if (c.messenger === 'telegram') url = `https://t.me/${c.messenger_handle.replace(/^@/,'')}`;
+  else if (c.messenger === 'email') url = `mailto:${c.email}`;
+  else if (c.messenger === 'viber') url = `viber://chat?number=${encodeURIComponent(c.messenger_handle)}`;
+  else if (c.messenger === 'instagram') url = `https://instagram.com/${c.messenger_handle.replace(/^@/,'')}`;
+  if (url) window.open(url, '_blank');
+  else showToast('Канал не поддерживает прямой переход');
+}
+
+function editContact(id) {
+  showToast('✏️ Форма редактирования появится в следующей итерации.');
+}
+function deleteContact(id) {
+  const c = CONTACTS.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Удалить контакт "${c.name} ${c.last_name}"?`)) return;
+  const idx = CONTACTS.findIndex(x => x.id === id);
+  CONTACTS.splice(idx, 1);
+  closeCnModal();
+  renderContacts(); updateStats();
+  showToast('🗑 Контакт удалён');
+}
+
+function openAddContact() {
+  showToast('➕ Форма добавления появится после миграции таблицы contacts.');
+}
+function openImport() {
+  showToast('📥 Импорт CSV / VCF / Google Contacts — отдельная итерация.');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCnModal(); });
+
+updateStats();
+renderContacts();
+</script>
+</body>
+</html>

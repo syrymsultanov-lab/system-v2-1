@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Моя структура — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    .rank-pnl {
+      display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;
+    }
+    .rank-card {
+      background:linear-gradient(135deg,var(--card),var(--panel));
+      border:1px solid var(--brd); border-radius:16px; padding:20px;
+      position:relative; overflow:hidden;
+    }
+    .rank-card::after {
+      content:''; position:absolute; top:0; right:0; width:140px; height:100%;
+      background:linear-gradient(135deg,transparent,rgba(255,183,3,.06));
+    }
+    .rank-now { font-family:'Playfair Display',serif; font-size:18px; color:var(--sun); font-weight:700; margin-bottom:4px; }
+    .rank-sub { font-size:11px; color:var(--td); }
+    .rank-bar {
+      margin-top:14px; height:8px; border-radius:4px;
+      background:rgba(255,255,255,.05); overflow:hidden;
+    }
+    .rank-bar-fill {
+      height:100%; border-radius:4px;
+      background:linear-gradient(90deg,var(--sunw),var(--sun));
+      box-shadow:0 0 10px rgba(255,183,3,.4);
+    }
+    .rank-foot { display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:var(--td); font-family:'JetBrains Mono',monospace; }
+    .rank-foot b { color:var(--tb); }
+    .ref-card { display:flex; flex-direction:column; gap:8px; }
+    .ref-row { display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--gl); border:1px solid var(--brd); border-radius:10px; }
+    .ref-lbl { font-size:11px; color:var(--td); font-weight:600; }
+    .ref-val { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--azure); font-weight:700; flex:1; word-break:break-all; }
+    .ref-copy {
+      padding:5px 10px; font-size:11px; font-weight:600;
+      background:rgba(0,180,216,.10); color:var(--azure);
+      border:1px solid rgba(0,180,216,.25); border-radius:7px;
+      cursor:pointer; transition:all .15s;
+    }
+    .ref-copy:hover { background:rgba(0,180,216,.20); }
+
+    /* Partner row */
+    .pn-rank {
+      font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px;
+      letter-spacing:.5px; text-transform:uppercase;
+    }
+    .pn-rank.r-ed { color:#fff; background:linear-gradient(135deg,#9D4EDD,#5A189A); }
+    .pn-rank.r-id { color:#fff; background:linear-gradient(135deg,var(--ocean),var(--azure)); }
+    .pn-rank.r-nd { color:var(--sun); background:rgba(255,183,3,.18); border:1px solid rgba(255,183,3,.35); }
+    .pn-rank.r-rd { color:var(--green); background:var(--grn-s); border:1px solid rgba(6,214,160,.3); }
+    .pn-rank.r-smd{ color:var(--azure); background:rgba(0,180,216,.12); border:1px solid rgba(0,180,216,.3); }
+    .pn-rank.r-md { color:var(--sky); background:rgba(144,224,239,.10); border:1px solid rgba(144,224,239,.25); }
+    .pn-rank.r-act{ color:var(--td); background:var(--gl); border:1px solid var(--brd); }
+    .pn-rank.r-new{ color:var(--coral); background:rgba(255,107,107,.10); border:1px solid rgba(255,107,107,.25); }
+
+    .pn-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:3px; }
+    .pn-meta span { font-size:11px; color:var(--td); }
+    .pn-meta b { color:var(--tb); font-family:'JetBrains Mono',monospace; }
+    .pn-lvl {
+      font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px;
+      color:var(--td); background:var(--gl); border:1px solid var(--brd);
+      font-family:'JetBrains Mono',monospace;
+    }
+    .pn-lvl.l1 { color:var(--azure); background:rgba(0,180,216,.10); border-color:rgba(0,180,216,.25); }
+    .pn-lvl.l2 { color:var(--sky);   background:rgba(144,224,239,.08); border-color:rgba(144,224,239,.20); }
+    .pn-lvl.l3 { color:var(--td);    }
+
+    .pn-status-dot {
+      width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    }
+    .pn-status-dot.active   { background:var(--green); box-shadow:0 0 8px rgba(6,214,160,.5); }
+    .pn-status-dot.inactive { background:var(--td); }
+    .pn-status-dot.new      { background:var(--sun); box-shadow:0 0 8px rgba(255,183,3,.5); }
+
+    .pn-indent { padding-left:0; }
+    .pn-indent.l2 { padding-left:18px; border-left:2px solid rgba(0,180,216,.10); }
+    .pn-indent.l3 { padding-left:36px; border-left:2px solid rgba(144,224,239,.10); }
+
+    /* Leaderboard side */
+    .struct-grid { display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start; }
+    @media (max-width: 1024px) { .struct-grid { grid-template-columns:1fr; } }
+    @media (max-width: 768px) { .rank-pnl { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>Моя структура</h2>
+      <p>Команда партнёров и линии. Прогресс до следующего ранга, статистика по объёму и активности. <b>Это не гарантия дохода</b> — реальный результат зависит от работы каждого.</p>
+    </div>
+    <div class="welcome-r"><div class="wdate">Партнёров в команде: <b id="st-team-total">0</b></div></div>
+  </div>
+
+  <!-- Прогресс ранга + Реф-ссылка -->
+  <div class="rank-pnl">
+    <div class="rank-card">
+      <div class="rank-now">⭐ Senior Marketing Director</div>
+      <div class="rank-sub">До <b style="color:var(--tb)">Regional Director</b> осталось: 2 активных MD в первой линии и $500 командного объёма</div>
+      <div class="rank-bar"><div class="rank-bar-fill" style="width:75%"></div></div>
+      <div class="rank-foot"><span>Прогресс</span><span><b>$1 500</b> / $2 000 CV</span></div>
+    </div>
+    <div class="rank-card ref-card">
+      <div class="rank-now" style="color:var(--azure)">🔗 Ваша реф-ссылка</div>
+      <div class="rank-sub">Любой переход по ней привязывает лида к вам как к спонсору</div>
+      <div class="ref-row">
+        <span class="ref-lbl">Код:</span>
+        <span class="ref-val" id="ref-code">TEST001</span>
+        <button class="ref-copy" onclick="copyRef('code')">Копировать</button>
+      </div>
+      <div class="ref-row">
+        <span class="ref-lbl">Ссылка:</span>
+        <span class="ref-val" id="ref-url">https://sairateam.com/?ref=TEST001</span>
+        <button class="ref-copy" onclick="copyRef('url')">Копировать</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">🌊</div><div class="sc-trend tu" id="st-team-trend">+0</div></div><div class="sc-val" id="st-team">0</div><div class="sc-lbl">В команде</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">🟢</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-active">0</div><div class="sc-lbl">Активные</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">🌳</div><div class="sc-trend tu"></div></div><div class="sc-val" id="st-depth">0</div><div class="sc-lbl">Глубина линий</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">💎</div><div class="sc-trend tu" id="st-cv-trend">+0</div></div><div class="sc-val" id="st-cv">0</div><div class="sc-lbl">Объём команды (CV)</div></div>
+  </div>
+
+  <div class="struct-grid">
+    <!-- LEFT: список партнёров -->
+    <div class="pnl">
+      <div class="pnl-h">
+        <div class="pnl-t">🌊 Партнёры команды</div>
+        <div class="pnl-tabs" id="pn-line">
+          <button class="pt active" data-l="all">Все</button>
+          <button class="pt" data-l="1">L1 — прямые</button>
+          <button class="pt" data-l="2">L2</button>
+          <button class="pt" data-l="3">L3+</button>
+        </div>
+      </div>
+      <div class="pnl-tabs" id="pn-status" style="padding:0 2px 6px">
+        <button class="pt active" data-s="all">Все</button>
+        <button class="pt" data-s="active">🟢 Активные</button>
+        <button class="pt" data-s="inactive">⚪ Неактивные</button>
+        <button class="pt" data-s="new">🆕 Новые (30 дн)</button>
+      </div>
+      <div class="sch">
+        <input type="text" id="pn-search" class="sch-i" placeholder="🔍 Поиск по имени, реф-коду, городу, рангу…">
+      </div>
+      <div class="tl" id="pn-list"></div>
+      <div class="leads-empty" id="pn-empty" style="display:none">
+        <div class="stub-icon">🌊</div>
+        <p>По выбранным фильтрам партнёров нет.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: Top-5 + быстрые сводки -->
+    <div>
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-t">🏆 Топ-5 по объёму</div>
+        </div>
+        <div class="ll" id="lb-list"></div>
+      </div>
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-t">📊 По линиям</div>
+        </div>
+        <div class="ll" id="line-stats"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Partner Modal -->
+<div class="modal" id="pn-modal">
+  <div class="modal-backdrop" onclick="closePnModal()"></div>
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePnModal()">✕</button>
+    <div id="pn-modal-body"></div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('structure');
+
+const MY_REF = 'TEST001';
+
+const RANK_MAP = {
+  ED:  { label:'Executive Director',         short:'ED',  cls:'r-ed'  },
+  ID:  { label:'International Director',     short:'ID',  cls:'r-id'  },
+  ND:  { label:'National Director',          short:'ND',  cls:'r-nd'  },
+  RD:  { label:'Regional Director',          short:'RD',  cls:'r-rd'  },
+  SMD: { label:'Senior Marketing Director',  short:'SMD', cls:'r-smd' },
+  MD:  { label:'Marketing Director',         short:'MD',  cls:'r-md'  },
+  ACT: { label:'Активный',                   short:'Active', cls:'r-act' },
+  NEW: { label:'Новичок',                    short:'New',  cls:'r-new' },
+};
+const STATUS_MAP = {
+  active:   { label:'Активен',     icon:'🟢' },
+  inactive: { label:'Неактивен',   icon:'⚪' },
+  new:      { label:'Новый',       icon:'🆕' },
+};
+
+// ===== MOCK PARTNERS (level 1 = прямые от Сайры; level 2 = от L1; ...) =====
+const PARTNERS = [
+  // Линия 1 — прямые
+  { id:1,  name:'Айдар',    last_name:'Касенов',    ref:'AID2025', level:1, upline:0, rank:'RD',  status:'active',   country:'KZ', city:'Алматы',  joined:'2025-08-12', personal_cv:280, team_cv:480, team_size:42, last_active:'2026-04-18' },
+  { id:2,  name:'Жанна',    last_name:'Бекмуратова', ref:'JBM77',   level:1, upline:0, rank:'SMD', status:'active',   country:'KZ', city:'Астана',  joined:'2025-09-04', personal_cv:210, team_cv:340, team_size:28, last_active:'2026-04-17' },
+  { id:3,  name:'Олег',     last_name:'Морозов',     ref:'OM-RU',   level:1, upline:0, rank:'MD',  status:'active',   country:'RU', city:'Москва',  joined:'2025-11-22', personal_cv:160, team_cv:220, team_size:14, last_active:'2026-04-16' },
+  { id:4,  name:'Мадина',   last_name:'Нурлыбекова', ref:'MN-001',  level:1, upline:0, rank:'MD',  status:'active',   country:'KZ', city:'Шымкент', joined:'2025-12-15', personal_cv:140, team_cv:180, team_size:9,  last_active:'2026-04-15' },
+  { id:5,  name:'Виктор',   last_name:'Лапин',       ref:'VL-RB',   level:1, upline:0, rank:'ACT', status:'inactive', country:'RU', city:'СПб',     joined:'2026-01-10', personal_cv:60,  team_cv:80,  team_size:3,  last_active:'2026-03-02' },
+  { id:6,  name:'Аружан',   last_name:'Темирова',    ref:'AT-NEW',  level:1, upline:0, rank:'NEW', status:'new',      country:'KZ', city:'Караганда', joined:'2026-04-02', personal_cv:40,  team_cv:40,  team_size:0,  last_active:'2026-04-18' },
+
+  // Линия 2 — под Айдаром
+  { id:7,  name:'Жулдыз',   last_name:'Сериккызы',   ref:'ZHS-A1',  level:2, upline:1, rank:'MD',  status:'active',   country:'KZ', city:'Алматы',  joined:'2025-10-18', personal_cv:130, team_cv:200, team_size:11, last_active:'2026-04-18' },
+  { id:8,  name:'Расул',    last_name:'Жумабаев',    ref:'RJ-A2',   level:2, upline:1, rank:'ACT', status:'active',   country:'KZ', city:'Тараз',   joined:'2025-12-04', personal_cv:90,  team_cv:120, team_size:5,  last_active:'2026-04-14' },
+  { id:9,  name:'Камила',   last_name:'Орынбасар',   ref:'KO-A3',   level:2, upline:1, rank:'NEW', status:'new',      country:'KZ', city:'Алматы',  joined:'2026-03-25', personal_cv:50,  team_cv:50,  team_size:0,  last_active:'2026-04-17' },
+  // Линия 2 — под Жанной
+  { id:10, name:'Эльвира',  last_name:'Сейтжанова',  ref:'ES-J1',   level:2, upline:2, rank:'MD',  status:'active',   country:'KZ', city:'Астана',  joined:'2025-11-30', personal_cv:120, team_cv:160, team_size:8,  last_active:'2026-04-18' },
+  { id:11, name:'Самат',    last_name:'Жаксыбеков',  ref:'SZH-J2',  level:2, upline:2, rank:'ACT', status:'inactive', country:'KZ', city:'Кокшетау',joined:'2026-01-22', personal_cv:70,  team_cv:90,  team_size:2,  last_active:'2026-02-28' },
+  // Линия 2 — под Олегом
+  { id:12, name:'Анна',     last_name:'Семёнова',    ref:'AS-O1',   level:2, upline:3, rank:'ACT', status:'active',   country:'RU', city:'Казань',  joined:'2026-01-08', personal_cv:100, team_cv:140, team_size:5,  last_active:'2026-04-17' },
+
+  // Линия 3 — под Жулдыз
+  { id:13, name:'Бекзат',   last_name:'Махамбетов',  ref:'BM-Z1',   level:3, upline:7, rank:'NEW', status:'new',      country:'KZ', city:'Алматы',  joined:'2026-03-30', personal_cv:30,  team_cv:30,  team_size:0,  last_active:'2026-04-18' },
+  { id:14, name:'Гульмира', last_name:'Ержанова',    ref:'GE-Z2',   level:3, upline:7, rank:'ACT', status:'active',   country:'KZ', city:'Тараз',   joined:'2026-02-14', personal_cv:80,  team_cv:80,  team_size:0,  last_active:'2026-04-16' },
+  // Линия 3 — под Эльвирой
+  { id:15, name:'Игорь',    last_name:'Беляков',     ref:'IB-E1',   level:3, upline:10, rank:'NEW',status:'new',      country:'RU', city:'Москва',  joined:'2026-04-05', personal_cv:20,  team_cv:20,  team_size:0,  last_active:'2026-04-13' },
+  { id:16, name:'Лейла',    last_name:'Жакупова',    ref:'LZH-E2',  level:3, upline:10, rank:'ACT',status:'active',   country:'KZ', city:'Астана',  joined:'2026-02-28', personal_cv:60,  team_cv:60,  team_size:0,  last_active:'2026-04-18' },
+];
+
+let lineFilter = 'all';
+let statusFilter = 'all';
+let pnSearch = '';
+
+function findUpline(p) {
+  if (!p.upline) return { name:'Сайра (вы)', ref:MY_REF };
+  const u = PARTNERS.find(x => x.id === p.upline);
+  return u ? { name:`${u.name} ${u.last_name}`, ref:u.ref } : { name:'—', ref:'—' };
+}
+function downlineCount(id) {
+  return PARTNERS.filter(p => p.upline === id).length;
+}
+function isNewPartner(p) {
+  const d = new Date(p.joined);
+  const cutoff = new Date('2026-04-18'); cutoff.setDate(cutoff.getDate()-30);
+  return d >= cutoff;
+}
+
+function updateStats() {
+  const total = PARTNERS.length;
+  const active = PARTNERS.filter(p => p.status === 'active').length;
+  const depth = Math.max(...PARTNERS.map(p => p.level), 0);
+  const cv = PARTNERS.reduce((s,p) => s + p.team_cv, 0);
+  const newCount = PARTNERS.filter(isNewPartner).length;
+  document.getElementById('st-team').textContent = total;
+  document.getElementById('st-team-total').textContent = total;
+  document.getElementById('st-team-trend').textContent = newCount ? `+${newCount}` : '0';
+  document.getElementById('st-active').textContent = active;
+  document.getElementById('st-depth').textContent = depth;
+  document.getElementById('st-cv').textContent = cv.toLocaleString('ru-RU');
+  document.getElementById('st-cv-trend').textContent = `+${(cv/30|0)}`;
+}
+
+function renderPartners() {
+  const list = document.getElementById('pn-list');
+  const empty = document.getElementById('pn-empty');
+  const q = pnSearch.toLowerCase().trim();
+
+  let filtered = PARTNERS.filter(p => {
+    if (lineFilter !== 'all') {
+      const lv = parseInt(lineFilter, 10);
+      if (lv === 3) { if (p.level < 3) return false; }
+      else { if (p.level !== lv) return false; }
+    }
+    if (statusFilter === 'new') { if (!isNewPartner(p)) return false; }
+    else if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+    if (!q) return true;
+    const r = RANK_MAP[p.rank]?.label || '';
+    const hay = `${p.name} ${p.last_name} ${p.ref} ${p.city} ${r}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  // Сортировка: по линии, затем по объёму команды убыв.
+  filtered.sort((a,b) => a.level - b.level || b.team_cv - a.team_cv);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(p => {
+    const r = RANK_MAP[p.rank];
+    const lvCls = p.level === 1 ? 'l1' : p.level === 2 ? 'l2' : 'l3';
+    const indent = lineFilter === 'all' ? `pn-indent ${lvCls}` : '';
+    const initials = `${p.name[0]}${p.last_name[0]}`;
+    const dl = downlineCount(p.id);
+    return `
+      <div class="ti lead-ti ${indent}" onclick="openPnModal(${p.id})">
+        <div class="pn-status-dot ${p.status}" title="${STATUS_MAP[p.status].label}"></div>
+        <div class="la lead-ava" style="width:34px;height:34px;font-size:12px">${initials}</div>
+        <div class="ti-b">
+          <div class="ti-t">${p.name} ${p.last_name} <span class="pn-lvl ${lvCls}">L${p.level}</span></div>
+          <div class="pn-meta">
+            <span>📍 ${p.city}</span>
+            <span>👥 <b>${p.team_size}</b></span>
+            <span>💎 <b>${p.team_cv}</b> CV</span>
+            ${dl ? `<span>⬇️ <b>${dl}</b> в линии</span>` : ''}
+          </div>
+        </div>
+        <div class="pn-rank ${r.cls}">${r.short}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderLeaderboard() {
+  const top = [...PARTNERS].sort((a,b) => b.team_cv - a.team_cv).slice(0,5);
+  const ll = document.getElementById('lb-list');
+  ll.innerHTML = top.map((p,i) => {
+    const r = RANK_MAP[p.rank];
+    const place = i === 0 ? 'g' : i === 1 ? 's' : i === 2 ? 'b' : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+    return `
+      <div class="li" onclick="openPnModal(${p.id})" style="cursor:pointer">
+        <div class="lr ${place}">${medal}</div>
+        <div class="la lead-ava" style="width:30px;height:30px;font-size:11px">${p.name[0]}${p.last_name[0]}</div>
+        <div class="li-i">
+          <div class="li-n">${p.name} ${p.last_name}</div>
+          <div class="li-s">L${p.level} · ${r.short} · ${p.team_size} в команде</div>
+        </div>
+        <div class="li-p">${p.team_cv}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderLineStats() {
+  const lines = [1,2,3];
+  const el = document.getElementById('line-stats');
+  el.innerHTML = lines.map(lv => {
+    const inLine = PARTNERS.filter(p => lv === 3 ? p.level >= 3 : p.level === lv);
+    const active = inLine.filter(p => p.status === 'active').length;
+    const cv = inLine.reduce((s,p) => s + p.team_cv, 0);
+    const lvCls = `l${lv}`;
+    const label = lv === 3 ? 'L3+' : `L${lv}`;
+    return `
+      <div class="li">
+        <div class="pn-lvl ${lvCls}" style="font-size:11px">${label}</div>
+        <div class="li-i">
+          <div class="li-n">${inLine.length} партнёров</div>
+          <div class="li-s">🟢 ${active} активных · 💎 ${cv} CV</div>
+        </div>
+        <div class="li-p">${cv}</div>
+      </div>`;
+  }).join('');
+}
+
+// ===== filters =====
+document.getElementById('pn-line').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#pn-line .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); lineFilter = btn.dataset.l; renderPartners();
+});
+document.getElementById('pn-status').addEventListener('click', e => {
+  const btn = e.target.closest('.pt'); if (!btn) return;
+  document.querySelectorAll('#pn-status .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); statusFilter = btn.dataset.s; renderPartners();
+});
+document.getElementById('pn-search').addEventListener('input', e => { pnSearch = e.target.value; renderPartners(); });
+
+// ===== modal =====
+function openPnModal(id) {
+  const p = PARTNERS.find(x => x.id === id);
+  if (!p) return;
+  const r = RANK_MAP[p.rank];
+  const st = STATUS_MAP[p.status];
+  const upl = findUpline(p);
+  const dl = downlineCount(p.id);
+  const refLink = `https://sairateam.com/?ref=${p.ref}`;
+  const body = document.getElementById('pn-modal-body');
+  body.innerHTML = `
+    <div class="modal-head">
+      <div class="la lead-ava">${p.name[0]}${p.last_name[0]}</div>
+      <div>
+        <div class="modal-ttl">${p.name} ${p.last_name}</div>
+        <div class="modal-sub">L${p.level} · ${p.city}, ${p.country} · в команде с ${p.joined}</div>
+      </div>
+      <div class="pn-rank ${r.cls}" style="margin-left:auto">${r.short}</div>
+    </div>
+    <div class="modal-grid">
+      <div class="mg-row"><span class="mg-k">${st.icon} Статус</span><span class="mg-v">${st.label} · был ${p.last_active}</span></div>
+      <div class="mg-row"><span class="mg-k">⭐ Ранг</span><span class="mg-v">${r.label}</span></div>
+      <div class="mg-row"><span class="mg-k">⬆️ Спонсор</span><span class="mg-v">${upl.name} <span style="color:var(--td);font-weight:500">(${upl.ref})</span></span></div>
+      <div class="mg-row"><span class="mg-k">🔗 Реф-код</span><span class="mg-v" style="font-family:'JetBrains Mono',monospace;color:var(--azure)">${p.ref}</span></div>
+      <div class="mg-row"><span class="mg-k">💼 Личный CV</span><span class="mg-v">${p.personal_cv}</span></div>
+      <div class="mg-row"><span class="mg-k">💎 Командный CV</span><span class="mg-v">${p.team_cv}</span></div>
+      <div class="mg-row"><span class="mg-k">👥 В команде</span><span class="mg-v">${p.team_size} человек</span></div>
+      <div class="mg-row"><span class="mg-k">⬇️ Прямые приглашения</span><span class="mg-v">${dl}</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-p" onclick="copyPartnerLink('${refLink}')">🔗 Копировать его реф-ссылку</button>
+      <button class="mbtn mbtn-msg" onclick="msgPartner(${p.id})">💬 Написать</button>
+      <button class="mbtn mbtn-ai" onclick="partnerStats(${p.id})">📊 Подробная статистика</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px">
+      <button class="mbtn mbtn-g" onclick="partnerLeads(${p.id})">🎯 Лиды партнёра</button>
+      ${dl ? `<button class="mbtn" onclick="showDownline(${p.id})">⬇️ Его команда (${dl})</button>` : ''}
+    </div>
+  `;
+  document.getElementById('pn-modal').classList.add('active');
+}
+function closePnModal() { document.getElementById('pn-modal').classList.remove('active'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePnModal(); });
+
+// ===== actions =====
+function showToast(msg) {
+  let el = document.getElementById('app-toast');
+  if (!el) { el = document.createElement('div'); el.id='app-toast'; el.className='toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => el.classList.remove('show'), 2800);
+}
+function copyRef(kind) {
+  const text = kind === 'code' ? MY_REF : `https://sairateam.com/?ref=${MY_REF}`;
+  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
+  showToast(`📋 Скопировано: ${text}`);
+}
+function copyPartnerLink(link) {
+  if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+  showToast(`📋 Реф-ссылка партнёра скопирована`);
+}
+function msgPartner(id) {
+  const p = PARTNERS.find(x => x.id === id);
+  showToast(`💬 Чат с ${p.name} появится после интеграции внутренних сообщений.`);
+}
+function partnerStats(id) { showToast('📊 Детальная статистика появится в следующей итерации.'); }
+function partnerLeads(id) {
+  const p = PARTNERS.find(x => x.id === id);
+  showToast(`🎯 Фильтр по партнёру появится в leads.html (партнёр: ${p.name}).`);
+}
+function showDownline(id) {
+  closePnModal();
+  pnSearch = '';
+  document.getElementById('pn-search').value = '';
+  // упрощённо: показываем всех чьи upline = id (без рекурсии глубже)
+  const list = document.getElementById('pn-list');
+  const dl = PARTNERS.filter(p => p.upline === id);
+  const upline = PARTNERS.find(p => p.id === id);
+  if (dl.length === 0) { showToast('У этого партнёра пока нет прямых приглашений.'); return; }
+  showToast(`⬇️ Команда ${upline.name}: ${dl.length} партнёров`);
+  // Снимаем активные фильтры, показываем только downline
+  document.querySelectorAll('#pn-line .pt').forEach(b => b.classList.remove('active'));
+  document.querySelector('#pn-line .pt[data-l="all"]').classList.add('active');
+  lineFilter = 'all';
+  document.getElementById('pn-empty').style.display = 'none';
+  list.innerHTML = dl.map(p => {
+    const r = RANK_MAP[p.rank];
+    const lvCls = p.level === 1 ? 'l1' : p.level === 2 ? 'l2' : 'l3';
+    return `
+      <div class="ti lead-ti" onclick="openPnModal(${p.id})">
+        <div class="pn-status-dot ${p.status}"></div>
+        <div class="la lead-ava" style="width:34px;height:34px;font-size:12px">${p.name[0]}${p.last_name[0]}</div>
+        <div class="ti-b">
+          <div class="ti-t">${p.name} ${p.last_name} <span class="pn-lvl ${lvCls}">L${p.level}</span></div>
+          <div class="pn-meta"><span>📍 ${p.city}</span><span>👥 <b>${p.team_size}</b></span><span>💎 <b>${p.team_cv}</b> CV</span></div>
+        </div>
+        <div class="pn-rank ${r.cls}">${r.short}</div>
+      </div>`;
+  }).join('');
+}
+
+updateStats();
+renderPartners();
+renderLeaderboard();
+renderLineStats();
+</script>
+</body>
+</html>

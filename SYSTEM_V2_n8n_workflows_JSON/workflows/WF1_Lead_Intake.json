@@ -1,0 +1,418 @@
+{
+  "name": "WF1 — Lead Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "system-v2/lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4da92a9e-e148-4477-b49d-d6cb719dd5d7",
+      "name": "Webhook Lead Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst clean = (v) => (v ?? '').toString().trim();\nconst email = clean(body.email).toLowerCase();\nconst phone = clean(body.phone).replace(/[^\\d+]/g, '');\nreturn [{\n  partner_id: clean(body.partner_id),\n  full_name: clean(body.full_name),\n  phone,\n  email,\n  source: clean(body.source) || 'landing',\n  channel: clean(body.channel) || 'web',\n  received_at: new Date().toISOString()\n}];"
+      },
+      "id": "45841c78-65a4-418c-b73d-ac8823dcc32d",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/leads?select=id,partner_id,email,phone&partner_id=eq.' + $json.partner_id + '&or=(email.eq.' + encodeURIComponent($json.email) + ',phone.eq.' + encodeURIComponent($json.phone) + ')&limit=1'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      },
+      "id": "9089a328-9e0b-4a17-a298-b89fd4d3c0bc",
+      "name": "Find Existing Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -420,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{Array.isArray($json.body) ? $json.body.length : ($json.body?.length ?? 0)}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "d38cca3a-73bf-40fa-80f0-db954c87ba57",
+      "name": "If Existing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/leads'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {partner_id:$json.partner_id, full_name:$json.full_name, phone:$json.phone, email:$json.email, source:$json.source, channel:$json.channel} }}"
+      },
+      "id": "f084e58f-f193-4249-9d71-129aeb7f4e8e",
+      "name": "Insert Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = Array.isArray($json.body) ? $json.body[0] : ($json.body?.[0] ?? $json.body); return [{lead_id: lead.id, partner_id: lead.partner_id, mode:'existing'}];"
+      },
+      "id": "ec5cbf02-32e2-4b3e-af4a-f40e54aae1d7",
+      "name": "Use Existing Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = Array.isArray($json.body) ? $json.body[0] : ($json.body?.[0] ?? $json.body); return [{lead_id: lead.id, partner_id: lead.partner_id, mode:'inserted'}];"
+      },
+      "id": "5cbc0569-18eb-4a8a-b3f2-20e5bbbcd689",
+      "name": "Extract Lead Id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/lead_events'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {lead_id:$json.lead_id, partner_id:$json.partner_id, event_type:'lead_created', payload:{mode:$json.mode}} }}"
+      },
+      "id": "8a0e8757-4fe8-4c74-b836-3fee1645f545",
+      "name": "Insert Lead Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/ai_jobs'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {partner_id:$json.partner_id, job_type:'qualify_lead', target_type:'lead', target_id:$json.lead_id, status:'queued', payload:{source:'WF1'}} }}"
+      },
+      "id": "4a94fe8b-c54f-42e2-9bf2-89af6cdc9afe",
+      "name": "Queue AI Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL + '/rest/v1/events_log'}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {entity_type:'lead', entity_id:$json.lead_id, event_type:'wf1_lead_intake_completed', payload:{workflow:'WF1'}} }}"
+      },
+      "id": "f77fb996-d736-4283-b2ad-b9518f52c0f0",
+      "name": "Insert Event Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:true, lead_id:$json.lead_id} }}",
+        "options": {}
+      },
+      "id": "82b8f7dc-e3d2-4ed5-bab8-1ea5b09fb981",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1260,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Lead Intake": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Find Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "If Existing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Existing?": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Lead": {
+      "main": [
+        [
+          {
+            "node": "Extract Lead Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Insert Lead Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lead Id": {
+      "main": [
+        [
+          {
+            "node": "Insert Lead Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Lead Event": {
+      "main": [
+        [
+          {
+            "node": "Queue AI Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Queue AI Job": {
+      "main": [
+        [
+          {
+            "node": "Insert Event Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Event Log": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "meta": {
+    "template": "SYSTEM_V2_v1"
+  },
+  "versionId": "19489839-e4a5-4270-984b-45196093cedd"
+}

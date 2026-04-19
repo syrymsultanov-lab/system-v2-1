@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Заявки — system v2</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div id="app-header"></div>
+
+<main class="main">
+  <div class="welcome">
+    <div>
+      <h2>Заявки с лендинга</h2>
+      <p>Входящие заявки партнёров. Квалификация, статусы, передача AI. Лиды попадают сюда <b>только через форму</b> sairateam.com.</p>
+    </div>
+    <div class="welcome-r"><div class="wdate" id="leads-total-date">Всего: <b>47</b></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sc-top"><div class="sc-icon si1">🆕</div><div class="sc-trend tu">+3</div></div><div class="sc-val">8</div><div class="sc-lbl">Новые</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si2">📞</div><div class="sc-trend tu">5</div></div><div class="sc-val">12</div><div class="sc-lbl">В работе</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si3">✅</div><div class="sc-trend tu">+2</div></div><div class="sc-val">15</div><div class="sc-lbl">Квалифицированы</div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-icon si4">🏆</div><div class="sc-trend tu">+1</div></div><div class="sc-val">7</div><div class="sc-lbl">Конверсия</div></div>
+  </div>
+
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-t">📋 Список заявок</div>
+      <div class="pnl-tabs" id="leads-filter">
+        <button class="pt active" data-f="all">Все</button>
+        <button class="pt" data-f="new">Новые</button>
+        <button class="pt" data-f="contacted">В работе</button>
+        <button class="pt" data-f="qualified">Квал.</button>
+        <button class="pt" data-f="converted">Конверсия</button>
+        <button class="pt" data-f="rejected">Отказ</button>
+      </div>
+    </div>
+    <div class="sch">
+      <input type="text" id="leads-search" class="sch-i" placeholder="🔍 Поиск по имени, телефону, email, городу…">
+    </div>
+    <div class="tl" id="leads-list"></div>
+    <div class="leads-empty" id="leads-empty" style="display:none">
+      <div class="stub-icon">📭</div>
+      <p>По выбранным фильтрам заявок нет.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Lead Detail Modal -->
+<div class="modal" id="lead-modal">
+  <div class="modal-backdrop" onclick="closeLeadModal()"></div>
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLeadModal()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+<script>
+initDashboard('leads');
+
+// ===== MOCK LEADS =====
+const LEADS = [
+  { id:1, name:'Алия',    last_name:'Сатпаева',    phone:'+7 701 234 5678', email:'aliya.s@mail.ru',      city:'Алматы',  country:'KZ', source:'landing', status:'new',        messenger:'whatsapp', messenger_handle:'+77012345678', consent:true, consent_at:'2026-04-18 09:14', created_at:'2026-04-18 09:14' },
+  { id:2, name:'Марат',   last_name:'Кенжебаев',   phone:'+7 705 887 1122', email:'m.kenzhebaev@gmail.com', city:'Астана', country:'KZ', source:'landing', status:'contacted',  messenger:'telegram', messenger_handle:'@marat_k', consent:true, consent_at:'2026-04-17 18:02', created_at:'2026-04-17 18:02' },
+  { id:3, name:'Дана',    last_name:'Турсынова',   phone:'+7 747 330 4411', email:'dana.t@yandex.kz',     city:'Шымкент', country:'KZ', source:'landing', status:'qualified',  messenger:'whatsapp', messenger_handle:'+77473304411', consent:true, consent_at:'2026-04-17 12:40', created_at:'2026-04-17 12:40' },
+  { id:4, name:'Нурлан',  last_name:'Баймухамбетов',phone:'+7 702 556 9900', email:'nurlan.b@inbox.ru',    city:'Караганда',country:'KZ',source:'landing',status:'contacted',  messenger:'instagram',messenger_handle:'@nurlan.b', consent:true, consent_at:'2026-04-16 21:18', created_at:'2026-04-16 21:18' },
+  { id:5, name:'Елена',   last_name:'Морозова',    phone:'+7 906 112 3344', email:'morozova.e@mail.ru',   city:'Москва',  country:'RU', source:'landing', status:'converted',  messenger:'telegram', messenger_handle:'@elena_moroz', consent:true, consent_at:'2026-04-15 10:55', created_at:'2026-04-15 10:55' },
+  { id:6, name:'Ержан',   last_name:'Абдрахманов', phone:'+7 778 445 2211', email:'erzhan.abd@gmail.com', city:'Актобе',  country:'KZ', source:'landing', status:'rejected',   messenger:'whatsapp', messenger_handle:'+77784452211', consent:true, consent_at:'2026-04-14 16:33', created_at:'2026-04-14 16:33' },
+  { id:7, name:'Асель',   last_name:'Жумабекова',  phone:'+7 707 883 7700', email:'asel.zh@mail.ru',      city:'Алматы',  country:'KZ', source:'landing', status:'new',        messenger:'whatsapp', messenger_handle:'+77078837700', consent:true, consent_at:'2026-04-18 07:50', created_at:'2026-04-18 07:50' },
+  { id:8, name:'Тимур',   last_name:'Ахметов',     phone:'+7 701 998 4455', email:'timur.a@gmail.com',    city:'Астана', country:'KZ', source:'landing', status:'qualified',  messenger:'telegram', messenger_handle:'@timur_akh', consent:true, consent_at:'2026-04-16 14:22', created_at:'2026-04-16 14:22' },
+];
+
+const STATUS_MAP = {
+  new:        { label:'Новая',          tg:'tg1', dot:'da', icon:'🆕' },
+  contacted:  { label:'В работе',       tg:'tg2', dot:'ds', icon:'📞' },
+  qualified:  { label:'Квалифицирован', tg:'tg3', dot:'dg', icon:'✅' },
+  converted:  { label:'Конверсия',      tg:'tg-g',dot:'dsun',icon:'🏆' },
+  rejected:   { label:'Отказ',          tg:'tg-r',dot:'dc', icon:'❌' },
+};
+
+const MSG_MAP = {
+  whatsapp:  { label:'WhatsApp',  icon:'🟢' },
+  telegram:  { label:'Telegram',  icon:'✈️' },
+  instagram: { label:'Instagram', icon:'📷' },
+  viber:     { label:'Viber',     icon:'🟣' },
+  email:     { label:'Email',     icon:'✉️' },
+};
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+function renderLeads() {
+  const list = document.getElementById('leads-list');
+  const empty = document.getElementById('leads-empty');
+  const q = currentSearch.toLowerCase().trim();
+
+  const filtered = LEADS.filter(l => {
+    if (currentFilter !== 'all' && l.status !== currentFilter) return false;
+    if (!q) return true;
+    const hay = `${l.name} ${l.last_name} ${l.phone} ${l.email} ${l.city}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(l => {
+    const st = STATUS_MAP[l.status];
+    const ms = MSG_MAP[l.messenger] || { label:l.messenger, icon:'💬' };
+    const dateShort = l.created_at.slice(5,10).replace('-','.');
+    return `
+      <div class="ti lead-ti" onclick="openLeadModal(${l.id})">
+        <div class="tdot ${st.dot}"></div>
+        <div class="ti-b">
+          <div class="ti-t">${l.name} ${l.last_name} <span class="lead-city">· ${l.city}</span></div>
+          <div class="ti-m">${ms.icon} ${l.messenger_handle} · ${l.phone} · ${dateShort}</div>
+        </div>
+        <div class="tg ${st.tg}">${st.icon} ${st.label}</div>
+      </div>`;
+  }).join('');
+}
+
+// ===== Filter / Search =====
+document.getElementById('leads-filter').addEventListener('click', e => {
+  const btn = e.target.closest('.pt');
+  if (!btn) return;
+  document.querySelectorAll('#leads-filter .pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.f;
+  renderLeads();
+});
+document.getElementById('leads-search').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  renderLeads();
+});
+
+// ===== Modal =====
+function openLeadModal(id) {
+  const l = LEADS.find(x => x.id === id);
+  if (!l) return;
+  const st = STATUS_MAP[l.status];
+  const ms = MSG_MAP[l.messenger] || { label:l.messenger, icon:'💬' };
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-head">
+      <div class="la lead-ava">${l.name[0]}${l.last_name[0]}</div>
+      <div>
+        <div class="modal-ttl">${l.name} ${l.last_name}</div>
+        <div class="modal-sub">${l.city}, ${l.country} · заявка от ${l.created_at}</div>
+      </div>
+      <div class="tg ${st.tg}" style="margin-left:auto">${st.icon} ${st.label}</div>
+    </div>
+    <div class="modal-grid">
+      <div class="mg-row"><span class="mg-k">📱 Телефон</span><a class="mg-v" href="tel:${l.phone}">${l.phone}</a></div>
+      <div class="mg-row"><span class="mg-k">✉️ Email</span><a class="mg-v" href="mailto:${l.email}">${l.email}</a></div>
+      <div class="mg-row"><span class="mg-k">${ms.icon} Мессенджер</span><span class="mg-v">${ms.label} — ${l.messenger_handle}</span></div>
+      <div class="mg-row"><span class="mg-k">🌍 Локация</span><span class="mg-v">${l.city}, ${l.country}</span></div>
+      <div class="mg-row"><span class="mg-k">📥 Источник</span><span class="mg-v">${l.source}</span></div>
+      <div class="mg-row"><span class="mg-k">✅ Согласие</span><span class="mg-v">${l.consent ? 'Да · ' + l.consent_at : 'Нет'}</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-p" onclick="changeStatus(${l.id},'contacted')">📞 В работу</button>
+      <button class="mbtn mbtn-g" onclick="changeStatus(${l.id},'qualified')">✅ Квалифицировать</button>
+      <button class="mbtn mbtn-gold" onclick="changeStatus(${l.id},'converted')">🏆 Конверсия</button>
+      <button class="mbtn mbtn-r" onclick="changeStatus(${l.id},'rejected')">❌ Отказ</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px">
+      <button class="mbtn mbtn-ai" onclick="handAiDraft(${l.id})">🤖 AI-черновик</button>
+      <button class="mbtn mbtn-msg" onclick="openChat(${l.id})">💬 Открыть переписку</button>
+    </div>
+  `;
+  document.getElementById('lead-modal').classList.add('active');
+}
+function closeLeadModal() {
+  document.getElementById('lead-modal').classList.remove('active');
+}
+function changeStatus(id, newStatus) {
+  const l = LEADS.find(x => x.id === id);
+  if (l) { l.status = newStatus; renderLeads(); openLeadModal(id); }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLeadModal();
+});
+
+function showToast(msg) {
+  let t = document.getElementById('app-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'app-toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Полуавтомат: запросить черновик у AI (пока заглушка — реальный n8n ниже)
+function handAiDraft(id) {
+  const l = LEADS.find(x => x.id === id);
+  if (!l) return;
+  showToast(`🤖 Запрос черновика для ${l.name}. AI подготовит текст для вашего одобрения.`);
+  // TODO: POST ai_jobs(lead_id=id, type='draft', status='pending') → n8n → LLM → черновик в UI
+}
+
+// Переход на страницу лида (lead.html?id=X пока не создана)
+function openChat(id) {
+  showToast('💬 Страница переписки появится после реализации lead.html?id=' + id);
+  // TODO: window.location.href = `lead.html?id=${id}`;
+}
+
+renderLeads();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Obsidian workspace (user-specific, не коммитить)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/graph.json
+.obsidian/appearance.json
+.obsidian/hotkeys.json
+
+# Obsidian plugins cache
+.obsidian/plugins/*/data.json
+
+# Trash
+.trash/
